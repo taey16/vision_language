@@ -12,10 +12,11 @@ local total_samples_valid = 6000
 local dataset_name = 'tshirts_shirts_blous'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_31.bn_removed.t7'
+  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local rnn_size = 384--256
+local rnn_size = 256
 local num_rnn_layers = 2
 local input_encoding_size = 2048
 local batch_size = 16
@@ -28,7 +29,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch16_bs%d_encode%d_layer%d_lr%e', batch_size, rnn_size, num_rnn_layers, learning_rate
+  '_inception-v3-2015-12-05_bn_removed_epoch31_bs%d_encode%d_layer%d_lr%e', batch_size, rnn_size, num_rnn_layers, learning_rate
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid

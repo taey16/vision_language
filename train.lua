@@ -11,7 +11,7 @@ local net_utils = require 'misc.net_utils'
 require 'misc.DataLoader'
 require 'misc.optim_updates'
 require 'models.LanguageModel'
-require 'models.FeatureExpander'
+require 'models.FeatExpander'
 require 'optim'
 require 'cephes' -- for cephes.log2
 

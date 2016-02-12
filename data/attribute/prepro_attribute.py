@@ -25,6 +25,9 @@ The json file has a dict that contains:
 
 import os
 import sys
+import codecs
+import locale
+sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout) 
 import json
 import argparse
 from random import shuffle, seed
@@ -44,7 +47,11 @@ def prepro_captions(imgs):
       txt = str(s).lower().translate(None, string.punctuation).strip().split()
       img['processed_tokens'].append(txt)
       if i < 10 and j == 0: 
-        print txt; sys.stdout.flush()
+        #import pdb; pdb.set_trace()
+        txt_for_print = u''
+        for attr in txt:
+          txt_for_print += (unicode(attr.decode('utf-8')) + u' ')
+          sys.stdout.isatty(); print(txt_for_print); sys.stdout.flush()
 
 def build_vocab(imgs, word_count_threshold=5):
   count_thr = word_count_threshold
@@ -56,16 +63,30 @@ def build_vocab(imgs, word_count_threshold=5):
       for w in txt:
         counts[w] = counts.get(w, 0) + 1
   cw = sorted([(count,w) for w,count in counts.iteritems()], reverse=True)
+  #print 'top words and their counts:'
+  #print '\n'.join(map(str,cw[:20]))
+  cw_for_print = []
+  total_words = sum(counts.itervalues())
+  #import pdb; pdb.set_trace()
+  for count_word_tuple in cw:
+    cw_for_print.append((count_word_tuple[0], count_word_tuple[1].decode('utf-8')))
   print 'top words and their counts:'
-  print '\n'.join(map(str,cw[:20]))
+  total_percentage = 0.0
+  for count_word_tuple in cw_for_print:
+    percentage = count_word_tuple[0] * 1.0 / total_words
+    total_percentage += percentage
+    print(u'%d(%.5f): %s' % (count_word_tuple[0],  percentage * 100.0, unicode(count_word_tuple[1])))
+
+  print('total percentage of words: %.5f' % (total_percentage * 100.0)); sys.stdout.flush()
 
   # print some stats
-  total_words = sum(counts.itervalues())
+  #total_words = sum(counts.itervalues())
   print 'total words:', total_words
   bad_words = [w for w,n in counts.iteritems() if n <= count_thr]
   vocab = [w for w,n in counts.iteritems() if n > count_thr]
   bad_count = sum(counts[w] for w in bad_words)
-  print 'number of bad words: %d/%d = %.2f%%' % (len(bad_words), len(counts), len(bad_words)*100.0/len(counts))
+  print 'number of bad words(occurence <= %d): %d/%d = %.2f%%' % \
+    (count_thr, len(bad_words), len(counts), len(bad_words)*100.0/len(counts))
   print 'number of words in vocab would be %d' % (len(vocab), )
   print 'number of UNKs: %d/%d = %.2f%%' % (bad_count, total_words, bad_count*100.0/total_words)
 
@@ -254,7 +275,7 @@ if __name__ == "__main__":
     #'/storage/freebee/tshirts_shirts.image_sentence.txt',
     #/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt,
     help='number of images to assign to validation data (for CV etc)')
-  parser.add_argument('--num_val', default=5000, type=int, 
+  parser.add_argument('--num_val', default=6000, type=int, 
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--output_json', default= \
     '/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
@@ -266,7 +287,7 @@ if __name__ == "__main__":
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.h5',
     #'/storage/freebee/tshirts.image_sentence.txt.h5',
     help='output h5 file')
-  parser.add_argument('--word_count_threshold', default=5, type=int, 
+  parser.add_argument('--word_count_threshold', default=1, type=int, 
     help='only words that occur more than this number of times will be put in vocab')
   parser.add_argument('--image_dim', default=342, type=int, help='size of image')
 
