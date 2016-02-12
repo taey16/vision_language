@@ -79,7 +79,7 @@ cmd:option('-learning_rate_decay_start', -1,
 cmd:option('-learning_rate_decay_every', 50000, 
   'every how many iterations thereafter to drop LR by half?')
 cmd:option('-optim_alpha',0.8,
-  'alpha for adagrad/rmsprop/momentum/adam')
+  'alpha for adagrad/rmsprop/momentum/adam (i.e. stepsize, learningrate)')
 cmd:option('-optim_beta',0.999,
   'beta used for adam')
 cmd:option('-optim_epsilon',1e-8,
