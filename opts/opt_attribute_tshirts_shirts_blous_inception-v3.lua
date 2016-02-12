@@ -29,7 +29,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch31_bs%d_encode%d_layer%d_lr%e', batch_size, rnn_size, num_rnn_layers, learning_rate
+  '_inception-v3-2015-12-05_bn_removed_epoch31_bs%d_encode%d_layer%d_dropout0_lr%e', batch_size, rnn_size, num_rnn_layers, learning_rate
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid
@@ -68,7 +68,7 @@ cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
 cmd:option('-grad_clip',0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
-cmd:option('-drop_prob_lm', 0.5, 
+cmd:option('-drop_prob_lm', 0.0, 
   'strength of dropout in the Language Model RNN')
 cmd:option('-finetune_cnn_after', finetune_cnn_after, 
   'After what iteration do we start finetuning the CNN? (-1 = disable; never finetune, 0 = finetune from start)')
@@ -85,7 +85,7 @@ cmd:option('-learning_rate_decay_start', -1,
 cmd:option('-learning_rate_decay_every', 50000, 
   'every how many iterations thereafter to drop LR by half?')
 cmd:option('-optim_alpha',0.8,
-  'alpha for adagrad/rmsprop/momentum/adam')
+  'alpha for adagrad/rmsprop/momentum/adam (i.e. stepsize, learningrate')
 cmd:option('-optim_beta',0.999,
   'beta used for adam')
 cmd:option('-optim_epsilon',1e-8,
