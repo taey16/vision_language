@@ -4,6 +4,9 @@ require 'nn'
 require 'cutorch'
 require 'cunn'
 require 'cudnn'
+cudnn.benchmark = true
+cudnn.fastest = true
+cudnn.verbose = true
 require 'nngraph'
 local path = require 'pl.path'
 local utils = require 'misc.utils'
@@ -16,9 +19,9 @@ require 'optim'
 require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_inception-v3.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_coco_inception7.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
@@ -37,6 +40,7 @@ if string.len(opt.start_from) > 0 then
   for k,v in pairs(lm_modules) do net_utils.unsanitize_gradients(v) end
   protos.crit = nn.LanguageModelCriterion() -- not in checkpoints, create manually
   protos.expander = nn.FeatExpander(opt.seq_per_img) -- not in checkpoints, create manually
+  cudnn.convert(protos.cnn, cudnn)
   print(protos.cnn)
   print(protos.lm)
   print(protos.expander)

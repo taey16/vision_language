@@ -1,10 +1,13 @@
 
 local input_h5 = '/storage/coco/data_342.h5'
 local input_json = '/storage/coco/data_342.json'
+local total_samples_train = 123287
+local total_samples_test = 3200
 
 local use_vgg = false
 local torch_model= 
   '/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Wed_Jan_27_22_47_34_2016/model_10.bn_removed.t7'
+  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
 local rnn_size = 384
@@ -20,7 +23,8 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = 
-  '_inception-v3-2015-12-05_bn_removed_epoch10_mean_std_modified_bs16_embedding2048_encode384_layer3_lr4e-4'
+  ('_inception-v3-2015-12-05_bn_removed_epoch10_cudnn-v4_bs%d_embedding%d_encode%d_layer%d_lr%.5f'):format( 
+    batch_size, input_encoding_size, rnn_size, num_rnn_layers, learning_rate)
 local gpuid = 0
 
 cmd = torch.CmdLine()
@@ -100,11 +104,11 @@ cmd:option('-cnn_weight_decay', cnn_weight_decay,
   'L2 weight decay just for the CNN')
 
 -- Evaluation/Checkpointing
-cmd:option('-train_samples', 123287 - 3200,
+cmd:option('-train_samples', total_samples_train - total_samples_test, 
   '# of samples in training set')
-cmd:option('-val_images_use', 3200, 
+cmd:option('-val_images_use', total_samples_test, 
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor(7504/4.0), 
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train-total_samples_test)/batch_size/4.0), 
   'how often to save a model checkpoint?')
 cmd:option('-checkpoint_path', '/storage/coco/checkpoints', 
   'folder to save checkpoints into (empty = this folder)')
