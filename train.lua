@@ -1,4 +1,3 @@
-
 require 'torch'
 require 'nn'
 require 'cutorch'
@@ -437,9 +436,7 @@ while true do
   if iter % 10 == 0 then collectgarbage() end -- good idea to do this once in a while, i think
   if loss0 == nil then loss0 = losses.total_loss end
   if losses.total_loss > loss0 * 20 then
-    io.flush(print(
-      'loss seems to be exploding, quitting.'
-    ))
+    io.flush(print( 'loss seems to be exploding, quitting.'))
     break
   end
   if opt.max_iters > 0 and iter >= opt.max_iters then break end -- stopping criterion
