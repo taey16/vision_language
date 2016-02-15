@@ -272,7 +272,6 @@ function layer:sample_beam(imgs, opt)
 
       local inputs = {xt,unpack(state)}
       local out = self.core:forward(inputs)
-      print(out:size())
       logprobs = out[self.num_state+1] -- last element is the output vector
       state = {}
       for i=1,self.num_state do table.insert(state, out[i]) end

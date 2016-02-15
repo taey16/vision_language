@@ -23,7 +23,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = 
-  ('_inception-v3-2015-12-05_bn_removed_epoch10_cudnn-v4_bs%d_embedding%d_encode%d_layer%d_lr%.5f'):format( 
+  ('_inception-v3-2015-12-05_bn_removed_epoch33_cudnn-v4_bs%d_embedding%d_encode%d_layer%d_lr%.5f'):format( 
     batch_size, input_encoding_size, rnn_size, num_rnn_layers, learning_rate)
 local gpuid = 0
 
