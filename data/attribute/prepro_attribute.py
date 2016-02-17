@@ -50,7 +50,7 @@ def prepro_captions(imgs):
         #import pdb; pdb.set_trace()
         txt_for_print = u''
         for attr in txt:
-          txt_for_print += (unicode(attr.decode('utf-8')) + u' ')
+          txt_for_print += (attr.decode('utf-8') + u' ')
           sys.stdout.isatty(); print(txt_for_print); sys.stdout.flush()
 
 def build_vocab(imgs, word_count_threshold=5):
@@ -75,7 +75,7 @@ def build_vocab(imgs, word_count_threshold=5):
   for count_word_tuple in cw_for_print:
     percentage = count_word_tuple[0] * 1.0 / total_words
     total_percentage += percentage
-    print(u'%d(%.5f): %s' % (count_word_tuple[0],  percentage * 100.0, unicode(count_word_tuple[1])))
+    print(u'%d(%.5f): %s' % (count_word_tuple[0],  percentage * 100.0, count_word_tuple[1]))
 
   print('total percentage of words: %.5f' % (total_percentage * 100.0)); sys.stdout.flush()
 
@@ -271,19 +271,22 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--input_filename', default= \
-    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt',
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt',
+    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt',
     #'/storage/freebee/tshirts_shirts.image_sentence.txt',
     #/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt,
     help='number of images to assign to validation data (for CV etc)')
-  parser.add_argument('--num_val', default=6000, type=int, 
+  parser.add_argument('--num_val', default=8000, type=int, 
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--output_json', default= \
-    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json', 
+    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.json',
     #'/storage/freebee/tshirts.image_sentence.txt.json',
     help='output json file')
   parser.add_argument('--output_h5', default= \
-    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5', 
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5', 
+    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.h5',
     #'/storage/freebee/tshirts.image_sentence.txt.h5',
     help='output h5 file')
