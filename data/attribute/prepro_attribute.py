@@ -51,7 +51,7 @@ def prepro_captions(imgs):
         txt_for_print = u''
         for attr in txt:
           txt_for_print += (attr.decode('utf-8') + u' ')
-          sys.stdout.isatty(); print(txt_for_print); sys.stdout.flush()
+        sys.stdout.isatty(); print(txt_for_print); sys.stdout.flush()
 
 def build_vocab(imgs, word_count_threshold=5):
   count_thr = word_count_threshold
@@ -271,22 +271,27 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--input_filename', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt',
-    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt',
+    #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt',
+    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt',
     #'/storage/freebee/tshirts_shirts.image_sentence.txt',
-    #/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt,
+    #'/storage/freebee/csv_backup/tshirts_excel_1453264869210.csv.image_sentence.txt',
     help='number of images to assign to validation data (for CV etc)')
-  parser.add_argument('--num_val', default=8000, type=int, 
+  parser.add_argument('--num_val', default= \
+    #8000,
+    6000,
+    #5000,
+    #4000,
+    type=int, 
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--output_json', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json', 
-    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
+    #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json', 
+    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.json',
     #'/storage/freebee/tshirts.image_sentence.txt.json',
     help='output json file')
   parser.add_argument('--output_h5', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5', 
-    #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5', 
+    #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5', 
+    '/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.h5',
     #'/storage/freebee/tshirts.image_sentence.txt.h5',
     help='output h5 file')
