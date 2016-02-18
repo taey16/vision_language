@@ -28,8 +28,6 @@ function net_utils.build_inception_cnn(opt)
   local cnn_part = nn.Sequential()
   cnn_part:add(vision_encoder)
   cnn_part:add(nn.View(2048))
-  --cnn_part:add(nn.Linear(2048,encoding_size))
-  --cnn_part:add(cudnn.ReLU(true))
   print(cnn_part)
   print(string.format('===> Loading pre-trained model complete', model_filename))
   return cnn_part 

@@ -25,7 +25,7 @@ local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception
 --local opt = paths.dofile('opts/opt_coco_inception7.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
-cutorch.manualSeed(opt.seed)
+cutorch.manualSeedAll(opt.seed)
 
 local loader = DataLoader{h5_file = opt.input_h5, json_file = opt.input_json}
 
