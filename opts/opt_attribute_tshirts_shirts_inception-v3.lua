@@ -1,17 +1,17 @@
 
 local input_h5 = 
-  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5'
+  --'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5'
   --'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5'
-  --'/storage/freebee/tshirts_shirts.image_sentence.txt.h5'
+  '/storage/freebee/tshirts_shirts.image_sentence.txt.h5'
   --'/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt.h5'
 local input_json = 
-  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json'
+  --'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json'
   --'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json'
-  --'/storage/freebee/tshirts_shirts.image_sentence.txt.json'
+  '/storage/freebee/tshirts_shirts.image_sentence.txt.json'
   --'/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt.json'
-local total_samples_train = 103607
-local total_samples_valid = 8000
-local dataset_name = 'tshirts_shirts_blous_knit'
+local total_samples_train = 74716
+local total_samples_valid = 5000
+local dataset_name = 'tshirts_shirts'
 
 local torch_model= 
   '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
@@ -19,8 +19,8 @@ local torch_model=
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local rnn_size = 192--256
-local num_rnn_layers = 3--2
+local rnn_size = 256
+local num_rnn_layers = 2
 local input_encoding_size = 2048
 local batch_size = 16
 
