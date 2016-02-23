@@ -16,7 +16,8 @@ local opts = agent.opts
 local sample_opts = agent.sample_opts
 agent_filename = string.split(agent_filename, '/')
 local output_dic_filename = string.format(
-  '11st_julia_tshirts_shirtstes_blous_sentences_from99502.%s.txt', agent_filename[#agent_filename]
+  '11st_julia_tshirts_shirts_blous_knit_sentences.%s.txt', agent_filename[#agent_filename]
+  --'11st_julia_tshirts_shirtstes_blous_sentences_from99502.%s.txt', agent_filename[#agent_filename]
   --'11st_julia_tshirts_shirtstes_blous_sentences_from75001.%s.txt', agent_filename[#agent_filename]
   --'11st_julia_tshirts_shirtstes_blous_sentences.%s.txt', agent_filename[#agent_filename]
 )
@@ -25,7 +26,8 @@ local output_html_filename =
   string.format('%s.html', output_dic_filename)
 
 local input_list = 
-  '/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit99501_300000.csv'
+  '/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_knit_seed123_limit300000.csv'
+  --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit99501_300000.csv'
   --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit75000_300000.csv'
   --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit300000.csv'
 local url_list = demon_utils.load_list(input_list)
