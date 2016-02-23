@@ -16,7 +16,11 @@ local opts = agent.opts
 local sample_opts = agent.sample_opts
 agent_filename = string.split(agent_filename, '/')
 local output_dic_filename = string.format(
+<<<<<<< HEAD
   '11st_julia_tshirts_shirts_blous_knit_sentences.%s.txt', agent_filename[#agent_filename]
+=======
+  '11st_julia_tshirts_shirtstes_blous_knit_sentences.%s.txt', agent_filename[#agent_filename]
+>>>>>>> 08f70da34e6e99cd8bb5b31ea246944a86f2726e
   --'11st_julia_tshirts_shirtstes_blous_sentences_from99502.%s.txt', agent_filename[#agent_filename]
   --'11st_julia_tshirts_shirtstes_blous_sentences_from75001.%s.txt', agent_filename[#agent_filename]
   --'11st_julia_tshirts_shirtstes_blous_sentences.%s.txt', agent_filename[#agent_filename]

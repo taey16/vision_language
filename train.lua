@@ -20,7 +20,8 @@ require 'cephes' -- for cephes.log2
 
 local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
---local opt = paths.dofile('opts/opt_attribute_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_coco_inception7.lua')
 torch.manualSeed(opt.seed)
@@ -131,7 +132,7 @@ local function eval_split(split, evalopt)
       seq_per_img = opt.seq_per_img
     }
     -- preprocess in place, and don't augment
-    data.images = net_utils.preprocess_inception7(
+    data.images = net_utils.preprocess_for_predict(
       data.images, opt.crop_size, false, opt.gpuid >= 0
     )
     n = n + data.images:size(1)
@@ -205,7 +206,7 @@ local function lossFun(finetune_cnn)
     seq_per_img = opt.seq_per_img
   }
   -- preproces in-place, data augment in training
-  data.images = net_utils.preprocess_inception7(
+  data.images = net_utils.preprocess_for_train(
     data.images, opt.crop_size, true, opt.gpuid >= 0
   )
 
