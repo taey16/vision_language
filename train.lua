@@ -132,7 +132,7 @@ local function eval_split(split, evalopt)
       seq_per_img = opt.seq_per_img
     }
     -- preprocess in place, and don't augment
-    data.images = net_utils.preprocess_inception7(
+    data.images = net_utils.preprocess_for_predict(
       data.images, opt.crop_size, false, opt.gpuid >= 0
     )
     n = n + data.images:size(1)
@@ -206,7 +206,7 @@ local function lossFun(finetune_cnn)
     seq_per_img = opt.seq_per_img
   }
   -- preproces in-place, data augment in training
-  data.images = net_utils.preprocess_inception7(
+  data.images = net_utils.preprocess_for_train(
     data.images, opt.crop_size, true, opt.gpuid >= 0
   )
 

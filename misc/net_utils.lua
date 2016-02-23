@@ -34,7 +34,7 @@ function net_utils.build_inception_cnn(opt)
 end
 
 
-function net_utils.preprocess_inception7_predict(imgs, crop_size, data_augment, on_gpu)
+function net_utils.preprocess_for_predict(imgs, crop_size, data_augment, on_gpu)
   assert(data_augment ~= nil, 'pass this in. careful here.')
   assert(on_gpu ~= nil, 'pass this in. careful here.')
   local h,w = imgs:size(2), imgs:size(3)
@@ -60,7 +60,7 @@ function net_utils.preprocess_inception7_predict(imgs, crop_size, data_augment, 
 end
 
 
-function net_utils.preprocess_inception7(imgs, crop_size, data_augment, on_gpu)
+function net_utils.preprocess_for_train(imgs, crop_size, data_augment, on_gpu)
   assert(data_augment ~= nil, 'pass this in. careful here.')
   assert(on_gpu ~= nil, 'pass this in. careful here.')
   local h,w = imgs:size(3), imgs:size(4)

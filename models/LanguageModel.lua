@@ -302,7 +302,8 @@ function layer:updateOutput(input)
   -- language input
   local seq = input[2]
   assert(seq:size(1) == self.seq_length)
-  if self.clones == nil then self:createClones() end -- lazily create clones on first forward pass
+  -- lazily create clones on first forward pass
+  if self.clones == nil then self:createClones() end
 
   local batch_size = seq:size(2)
   self.output:resize(self.seq_length+2, batch_size, self.vocab_size+1)
@@ -312,7 +313,8 @@ function layer:updateOutput(input)
   self.state = {[0] = self.init_state}
   self.inputs = {}
   self.lookup_tables_inputs = {}
-  self.tmax = 0 -- we will keep track of max sequence length encountered in the data for efficiency
+  -- we will keep track of max sequence length encountered in the data for efficiency
+  self.tmax = 0
   for t=1,self.seq_length+2 do
 
     local can_skip = false
