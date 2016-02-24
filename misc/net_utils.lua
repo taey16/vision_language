@@ -3,7 +3,7 @@ require 'cunn'
 require 'cudnn'
 
 local utils = require 'misc.utils'
-local image_utils = require 'misc.image_utils' 
+--local image_utils = require 'misc.image_utils' 
 local net_utils = {}
 
 net_utils.inception7_mean = 
@@ -35,6 +35,7 @@ end
 
 
 function net_utils.preprocess_for_predict(imgs, crop_size, data_augment, on_gpu)
+  -- used ofr 3d tensor input
   assert(data_augment ~= nil, 'pass this in. careful here.')
   assert(on_gpu ~= nil, 'pass this in. careful here.')
   local h,w = imgs:size(2), imgs:size(3)
@@ -60,7 +61,8 @@ function net_utils.preprocess_for_predict(imgs, crop_size, data_augment, on_gpu)
 end
 
 
-function net_utils.preprocess_for_train(imgs, crop_size, data_augment, on_gpu)
+function net_utils.preprocess(imgs, crop_size, data_augment, on_gpu)
+  -- used ofr 3d tensor input
   assert(data_augment ~= nil, 'pass this in. careful here.')
   assert(on_gpu ~= nil, 'pass this in. careful here.')
   local h,w = imgs:size(3), imgs:size(4)

@@ -57,6 +57,8 @@ else
   lmOpt.dropout = opt.drop_prob_lm
   lmOpt.seq_length = loader:getSeqLength()
   lmOpt.batch_size = opt.batch_size * opt.seq_per_img
+  lmOpt.lstm_activation = opt.lstm_activation
+  lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
   -- initialize the ConvNet
   protos.cnn = net_utils.build_inception_cnn(
@@ -131,8 +133,9 @@ local function eval_split(split, evalopt)
       split = split, 
       seq_per_img = opt.seq_per_img
     }
+
     -- preprocess in place, and don't augment
-    data.images = net_utils.preprocess_for_predict(
+    data.images = net_utils.preprocess(
       data.images, opt.crop_size, false, opt.gpuid >= 0
     )
     n = n + data.images:size(1)
@@ -206,7 +209,7 @@ local function lossFun(finetune_cnn)
     seq_per_img = opt.seq_per_img
   }
   -- preproces in-place, data augment in training
-  data.images = net_utils.preprocess_for_train(
+  data.images = net_utils.preprocess(
     data.images, opt.crop_size, true, opt.gpuid >= 0
   )
 

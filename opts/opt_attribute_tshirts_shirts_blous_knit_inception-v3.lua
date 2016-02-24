@@ -19,11 +19,13 @@ local torch_model=
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local rnn_size = 192--256
-local num_rnn_layers = 3--2
+local rnn_size = 256
+local num_rnn_layers = 2
 local input_encoding_size = 2048
-local batch_size = 16
+local lstm_activation = 'relu'
+local rnn_type = 'gru'
 
+local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
 local cnn_learning_rate = 1e-5
@@ -32,7 +34,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_encode%d_layer%d_dropout5e-1_lr%e', batch_size, rnn_size, num_rnn_layers, learning_rate
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_%s_act_%s_encode%d_layer%d_dropout5e-1_lr%e', batch_size, rnn_type, lstm_activation, rnn_size, num_rnn_layers, learning_rate
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid
@@ -63,6 +65,8 @@ cmd:option('-input_encoding_size',input_encoding_size,
   'the encoding size of each token in the vocabulary, and the image.')
 cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
+cmd:option('-lstm_activation', lstm_activation,
+  'activation for LSTM [tanh | relu } none]')
 
 -- Optimization: General
 cmd:option('-max_iters', -1, 
@@ -111,7 +115,7 @@ cmd:option('-train_samples', total_samples_train - total_samples_valid,
   '# of samples in training set')
 cmd:option('-val_images_use',total_samples_valid,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid) / batch_size /4.0), 
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid) / batch_size /2.0), 
   'how often to save a model checkpoint?')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')

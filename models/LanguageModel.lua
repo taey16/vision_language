@@ -16,11 +16,19 @@ function layer:__init(opt)
   self.input_encoding_size = utils.getopt(opt, 'input_encoding_size')
   self.rnn_size = utils.getopt(opt, 'rnn_size')
   self.num_layers = utils.getopt(opt, 'num_layers', 1)
-  local dropout = utils.getopt(opt, 'dropout', 0)
+  self.lstm_activation = utils.getopt(opt, 'lstm_activation', 'tanh')
+  self.rnn_type = utils.getopt(opt, 'rnn_type', 'lstm')
+  local dropout = utils.getopt(opt, 'dropout', 0.5)
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core lstm network. note +1 for both the START and END tokens
-  self.core = LSTM.lstm(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout)
+  if self.rnn_type == 'lstm' then
+    self.core = LSTM.lstm(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout, self.lstm_activation)
+  elseif self.rnn_type == 'gru' then
+    self.core = GRU.gru(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout)
+  elseif self.rnn_type == 'rnn' then
+    self.core = RNN.rnn(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout)
+  end
   self.lookup_table = nn.LookupTable(self.vocab_size + 1, self.input_encoding_size)
   self:_createInitState(1) -- will be lazily resized later during forward passes
 end
