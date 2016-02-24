@@ -17,12 +17,12 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout)
   local outputs = {}
   for L = 1,num_layer do
     
-    local prev_h = inputs[L*2+1]
+    local prev_h = inputs[L+1]
     if L == 1 then 
       x = inputs[1]
       input_size_L = input_size
     else 
-      x = outputs[(L-1)*2] 
+      x = outputs[L-1] 
       if dropout > 0 then 
         x = nn.Dropout(dropout)(x):annotate{name='drop_'..L}
        end -- apply dropout, if any
