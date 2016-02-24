@@ -61,7 +61,7 @@ else
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
   -- initialize the ConvNet
-  protos.cnn = net_utils.build_inception_cnn(
+  protos.cnn = net_utils.build_cnn(
     {encoding_size = opt.input_encoding_size, model_filename = opt.torch_model}
   )
   -- initialize a special FeatExpander module that "corrects" for the batch number discrepancy 

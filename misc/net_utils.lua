@@ -18,7 +18,7 @@ net_utils.inception7_std =
   torch.FloatTensor{0.22682182875849, 0.22206057852892, 0.22145828935297}
 
 
-function net_utils.build_inception_cnn(opt)
+function net_utils.build_cnn(opt)
   local model_filename = utils.getopt(opt, 'model_filename', 
     '/storage/ImageNet/ILSVRC2012/torch_cache/inception7/digits_gpu_2_lr0.045SatDec514:08:122015/model_40.bn_removed.t7')
   local encoding_size = utils.getopt(opt, 'encoding_size', 512)
