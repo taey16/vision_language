@@ -16,7 +16,6 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
   local x, input_size_L
   local outputs = {}
   for L = 1,num_layer do
-    
     local prev_h = inputs[L+1]
     if L == 1 then 
       x = inputs[1]
@@ -28,7 +27,6 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
        end -- apply dropout, if any
       input_size_L = rnn_size
     end
-
     -- RNN tick
     local i2h = nn.Linear(input_size_L, rnn_size)(x)
     local h2h = nn.Linear(rnn_size, rnn_size)(prev_h)
@@ -40,7 +38,6 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
     else
       next_h = nn.CAddTable(){i2h, h2h}
     end
-
     table.insert(outputs, next_h)
   end
 
