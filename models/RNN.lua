@@ -3,7 +3,7 @@ require 'nngraph'
 
 local RNN = {}
 
-function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout)
+function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activation)
   dropout = dropout or 0.5
   
   -- there are n+1 inputs (hiddens on each layer and x)
@@ -32,12 +32,19 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout)
     -- RNN tick
     local i2h = nn.Linear(input_size_L, rnn_size)(x)
     local h2h = nn.Linear(rnn_size, rnn_size)(prev_h)
-    local next_h = nn.Tanh(true)(nn.CAddTable(){i2h, h2h})
+    local next_h
+    if activation == 'tanh' then
+      next_h = nn.Tanh(true)(nn.CAddTable(){i2h, h2h})
+    elseif activation == 'relu' then
+      next_h = nn.ReLU(true)(nn.CAddTable(){i2h, h2h})
+    else
+      next_h = nn.CAddTable(){i2h, h2h}
+    end
 
     table.insert(outputs, next_h)
   end
 
--- set up the decoder
+  -- set up the decoder
   local top_h = outputs[#outputs]
   if dropout > 0 then 
     top_h = nn.Dropout(dropout)(top_h):annotate{name='drop_final'}

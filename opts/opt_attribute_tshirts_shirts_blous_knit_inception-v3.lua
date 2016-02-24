@@ -22,7 +22,7 @@ local crop_size = 299
 local rnn_size = 256
 local num_rnn_layers = 2
 local input_encoding_size = 2048
-local lstm_activation = 'relu'
+local rnn_activation = 'relu'
 local rnn_type = 'gru'
 
 local batch_size = 16
@@ -34,7 +34,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_%s_act_%s_encode%d_layer%d_dropout5e-1_lr%e', batch_size, rnn_type, lstm_activation, rnn_size, num_rnn_layers, learning_rate
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_%s_act_%s_encode%d_layer%d_dropout5e-1_lr%e', batch_size, rnn_type, rnn_activation, rnn_size, num_rnn_layers, learning_rate
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid
@@ -65,8 +65,8 @@ cmd:option('-input_encoding_size',input_encoding_size,
   'the encoding size of each token in the vocabulary, and the image.')
 cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
-cmd:option('-lstm_activation', lstm_activation,
-  'activation for LSTM [tanh | relu } none]')
+cmd:option('-rnn_activation', rnn_activation,
+  'activation for LSTM/RNN [tanh | relu | none]')
 
 -- Optimization: General
 cmd:option('-max_iters', -1, 

@@ -2,7 +2,7 @@ require 'nn'
 require 'nngraph'
 
 local LSTM = {}
-function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, lstm_activation)
+function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activation)
   dropout = dropout or 0.5 
 
   -- there will be 2*n+1 inputs
@@ -43,11 +43,11 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, lstm_a
     local out_gate   = nn.Sigmoid(true)(n3)
     -- decode the write inputs
     local in_transform
-    if lstm_activation == 'tanh' then
+    if activation == 'tanh' then
       in_transform = nn.Tanh(true)(n4)
-    elseif lstm_activation == 'relu' then
+    elseif activation == 'relu' then
       in_transform = nn.ReLU(true)(n4)
-    elseif lstm_activation == 'none' then
+    else
       in_transform = n4
     end
       
@@ -58,14 +58,13 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, lstm_a
       })
     -- gated cells form the output
     local next_h
-    if lstm_activation == 'tahn' then
+    if activation == 'tahn' then
       next_h = nn.CMulTable()({out_gate, nn.Tanh(true)(next_c)})
-    elseif lstm_activation == 'relu' then
+    elseif activation == 'relu' then
       next_h = nn.CMulTable()({out_gate, nn.ReLU(true)(next_c)})
-    elseif lstm_activation == 'none' then
+    else
       next_h = nn.CMulTable()({out_gate, next_c})
     end
-  
     
     table.insert(outputs, next_c)
     table.insert(outputs, next_h)

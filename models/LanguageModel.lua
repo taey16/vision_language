@@ -16,22 +16,23 @@ function layer:__init(opt)
   self.input_encoding_size = utils.getopt(opt, 'input_encoding_size')
   self.rnn_size = utils.getopt(opt, 'rnn_size')
   self.num_layers = utils.getopt(opt, 'num_layers', 1)
-  self.lstm_activation = utils.getopt(opt, 'lstm_activation', 'tanh')
+  self.activation = utils.getopt(opt, 'activation', 'tanh')
   self.rnn_type = utils.getopt(opt, 'rnn_type', 'lstm')
   local dropout = utils.getopt(opt, 'dropout', 0.5)
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core lstm network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
-    self.core = LSTM.lstm(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout, self.lstm_activation)
+    self.core = LSTM.lstm(self.input_encoding_size,self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   elseif self.rnn_type == 'gru' then
-    self.core = GRU.gru(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout)
+    self.core = GRU.gru(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
   elseif self.rnn_type == 'rnn' then
-    self.core = RNN.rnn(self.input_encoding_size, self.vocab_size + 1, self.rnn_size, self.num_layers, dropout)
+    self.core = RNN.rnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   end
   self.lookup_table = nn.LookupTable(self.vocab_size + 1, self.input_encoding_size)
   self:_createInitState(1) -- will be lazily resized later during forward passes
 end
+
 
 function layer:_createInitState(batch_size)
   assert(batch_size ~= nil, 'batch size must be provided')
@@ -50,6 +51,7 @@ function layer:_createInitState(batch_size)
   self.num_state = #self.init_state
 end
 
+
 function layer:createClones()
   -- construct the net clones
   print('constructing clones inside the LanguageModel')
@@ -61,9 +63,11 @@ function layer:createClones()
   end
 end
 
+
 function layer:getModulesList()
   return {self.core, self.lookup_table}
 end
+
 
 function layer:parameters()
   -- we only have two internal modules, return their params
@@ -85,17 +89,20 @@ function layer:parameters()
   return params, grad_params
 end
 
+
 function layer:training()
   if self.clones == nil then self:createClones() end -- create these lazily if needed
   for k,v in pairs(self.clones) do v:training() end
   for k,v in pairs(self.lookup_tables) do v:training() end
 end
 
+
 function layer:evaluate()
   if self.clones == nil then self:createClones() end -- create these lazily if needed
   for k,v in pairs(self.clones) do v:evaluate() end
   for k,v in pairs(self.lookup_tables) do v:evaluate() end
 end
+
 
 --[[
 takes a batch of images and runs the model forward in sampling mode
