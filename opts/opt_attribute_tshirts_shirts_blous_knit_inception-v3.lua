@@ -75,7 +75,7 @@ cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
 cmd:option('-grad_clip',0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
-cmd:option('-drop_prob_lm', 0.0, 
+cmd:option('-drop_prob_lm', 0.5, 
   'strength of dropout in the Language Model RNN')
 cmd:option('-finetune_cnn_after', finetune_cnn_after, 
   'After what iteration do we start finetuning the CNN? (-1 = disable; never finetune, 0 = finetune from start)')
