@@ -34,22 +34,16 @@ function net_utils.build_cnn(opt)
 end
 
 
-function net_utils.preprocess_for_predict(imgs, crop_size, data_augment)
+function net_utils.preprocess_for_predict(imgs, crop_size)
   -- used ofr 3d tensor input
   assert(data_augment ~= nil, 'pass this in. careful here.')
-  assert(on_gpu ~= nil, 'pass this in. careful here.')
   local h,w = imgs:size(2), imgs:size(3)
   local cnn_input_size = crop_size
 
   if h > cnn_input_size or w > cnn_input_size then 
     local xoff, yoff
-    if data_augment then
-      xoff, yoff = torch.random(w-cnn_input_size), torch.random(h-cnn_input_size)
-    else
-      -- sample the center
-      xoff, yoff = math.ceil((w-cnn_input_size)/2), math.ceil((h-cnn_input_size)/2)
-    end
-    -- crop.
+    -- sample the center
+    xoff, yoff = math.ceil((w-cnn_input_size)/2), math.ceil((h-cnn_input_size)/2)
     imgs = imgs[{ {}, {yoff,yoff+cnn_input_size-1}, {xoff,xoff+cnn_input_size-1} }]
   end
   for c=1,3 do
