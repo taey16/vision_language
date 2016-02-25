@@ -36,7 +36,8 @@ end
 
 function net_utils.preprocess_for_predict(imgs, crop_size)
   -- used ofr 3d tensor input
-  assert(data_augment ~= nil, 'pass this in. careful here.')
+  assert(imgs:dim() == 3, 
+    'does not support 4D images in net_utils.preprocess_for_predict')
   local h,w = imgs:size(2), imgs:size(3)
   local cnn_input_size = crop_size
 
