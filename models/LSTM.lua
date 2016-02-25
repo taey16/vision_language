@@ -62,8 +62,11 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
       next_h = nn.CMulTable()({out_gate, nn.Tanh(true)(next_c)})
     elseif activation == 'relu' then
       next_h = nn.CMulTable()({out_gate, nn.ReLU(true)(next_c)})
-    else
+    elseif activation == 'none' then
       next_h = nn.CMulTable()({out_gate, next_c})
+    else
+      io.flush(error(string.format(
+        'check rnn_activation: %s', activation)))
     end
     
     table.insert(outputs, next_c)

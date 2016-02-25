@@ -59,6 +59,11 @@ else
   if data_seq_length ~= opt.seq_length then
     io.flush(print(string.format(
       'data_seq_length: %d, opt.seq_length: %d', data_seq_length, opt.seq_length)))
+    if opt.seq_length == -1 then
+      io.flush(print(string.format(
+        'we will use opt.seq_length: %d as dataloader said', data_seq_length)))
+      opt.seq_length = data_seq_length
+    end
   end
   lmOpt.seq_length = opt.seq_length
   lmOpt.batch_size = opt.batch_size * opt.seq_per_img

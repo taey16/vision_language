@@ -35,8 +35,11 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
       next_h = nn.Tanh(true)(nn.CAddTable(){i2h, h2h})
     elseif activation == 'relu' then
       next_h = nn.ReLU(true)(nn.CAddTable(){i2h, h2h})
-    else
+    elseif activation == 'none' then
       next_h = nn.CAddTable(){i2h, h2h}
+    else
+      io.flush(error(string.format(
+        'check rnn_activation: %s', activation)))
     end
     table.insert(outputs, next_h)
   end

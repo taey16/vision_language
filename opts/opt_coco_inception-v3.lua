@@ -3,29 +3,37 @@ local input_h5 = '/storage/coco/data_342.h5'
 local input_json = '/storage/coco/data_342.json'
 local total_samples_train = 123287
 local total_samples_test = 3200
+local dataset_name = 'coco'
 
-local use_vgg = false
 local torch_model= 
-  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Wed_Jan_27_22_47_34_2016/model_10.bn_removed.t7'
   '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
+local flip_jitter = 0
+
 local rnn_size = 384
 local num_rnn_layers = 3
+local seq_length = -1
 local input_encoding_size = 2048
-local batch_size = 16
+local rnn_type = 'lstm'
+local rnn_activation = 'tanh'
+local drop_prob_lm = 0.5
 
+local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
+local learning_rate_decay_start = 200000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
 local start_from = 
   ''
-local experiment_id = 
-  ('_inception-v3-2015-12-05_bn_removed_epoch33_cudnn-v4_bs%d_embedding%d_encode%d_layer%d_lr%.5f'):format( 
-    batch_size, input_encoding_size, rnn_size, num_rnn_layers, learning_rate)
-local gpuid = 0
+local experiment_id = string.format(
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
+)
+local checkpoint_path = string.format(
+  '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
+)
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -38,18 +46,14 @@ cmd:option('-input_h5',input_h5,
   'path to the h5file containing the preprocessed dataset')
 cmd:option('-input_json',input_json,
   'path to the json file containing additional info and vocab')
-cmd:option('-cnn_proto','/storage/models/vgg/vgg_layer16_deploy.prototxt',
-  'path to CNN prototxt file in Caffe format. Note this MUST be a VGGNet-16 right now.')
-cmd:option('-cnn_model','/storage/models/vgg/vgg_layer16.caffemodel',
-  'path to CNN model file containing the weights, Caffe format. Note this MUST be a VGGNet-16 right now.')
-cmd:option('-use_vgg', use_vgg, 
-  'use vgg16 or not')
 cmd:option('-torch_model', torch_model,
   'torch model file path')
 cmd:option('-image_size', image_size, 
   'size of input image')
 cmd:option('-crop_size', crop_size, 
   'size of croped input image')
+cmd:option('-flip_jitter', flip_jitter,
+  'flag for flipping [0 | 1]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 
@@ -60,6 +64,9 @@ cmd:option('-input_encoding_size',input_encoding_size,
   'the encoding size of each token in the vocabulary, and the image.')
 cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
+cmd:option('-seq_length', seq_length,
+  'number of seq. length (without EOS/SOS token)')
+cmd:option('-rnn_activation
 
 -- Optimization: General
 cmd:option('-max_iters', -1, 

@@ -74,6 +74,8 @@ cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
 cmd:option('-seq_length', seq_length,
   'number of seq. length (without EOS/SOS token)')
+cmd:option('-rnn_type', rnn_type,
+  'rnn type [rnn | lstm | gru]')
 cmd:option('-rnn_activation', rnn_activation,
   'activation for LSTM/RNN [tanh | relu | none]')
 

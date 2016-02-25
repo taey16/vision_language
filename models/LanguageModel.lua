@@ -15,9 +15,9 @@ function layer:__init(opt)
   self.vocab_size = utils.getopt(opt, 'vocab_size') -- required
   self.input_encoding_size = utils.getopt(opt, 'input_encoding_size')
   self.rnn_size = utils.getopt(opt, 'rnn_size')
-  self.num_layers = utils.getopt(opt, 'num_layers', 1)
-  self.activation = utils.getopt(opt, 'activation', 'tanh')
-  self.rnn_type = utils.getopt(opt, 'rnn_type', 'lstm')
+  self.num_layers = utils.getopt(opt, 'num_layers')
+  self.rnn_type = utils.getopt(opt, 'rnn_type')
+  self.activation = utils.getopt(opt, 'activation')
   local dropout = utils.getopt(opt, 'dropout', 0.5)
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')
@@ -28,6 +28,9 @@ function layer:__init(opt)
     self.core = GRU.gru(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
   elseif self.rnn_type == 'rnn' then
     self.core = RNN.rnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+  else
+    io.flush(error(string.format(
+      'Correct rnn_type: %s', self.rnn_type)))
   end
   self.lookup_table = nn.LookupTable(self.vocab_size + 1, self.input_encoding_size)
   self:_createInitState(1) -- will be lazily resized later during forward passes
