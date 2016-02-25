@@ -33,6 +33,7 @@ local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
 local learning_rate_decay_start = 100000
+local learning_rate_decay_every = 50000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
@@ -100,7 +101,7 @@ cmd:option('-learning_rate', learning_rate,
   'learning rate')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
-cmd:option('-learning_rate_decay_every', 50000, 
+cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
   'every how many iterations thereafter to drop LR by half?')
 cmd:option('-optim_alpha',0.8,
   'alpha for adagrad/rmsprop/momentum/adam (i.e. stepsize, learningrate')
@@ -136,7 +137,6 @@ cmd:option('-losses_log_every', 0,
   'How often do we snapshot losses (in loss_history), for inclusion in the progress dump? (0 = disable)')
 
 -- misc
-cmd:option('-backend', 'cudnn', 'nn|cudnn')
 cmd:option('-id', experiment_id, 
   'an id identifying this run/job. used in cross-val and appended when writing progress files')
 cmd:option('-seed', 123, 
