@@ -2,7 +2,7 @@
 local input_h5 = '/storage/coco/data_342.h5'
 local input_json = '/storage/coco/data_342.json'
 local total_samples_train = 123287
-local total_samples_test = 3200
+local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
@@ -22,7 +22,8 @@ local drop_prob_lm = 0.5
 local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
-local learning_rate_decay_start = 200000
+local learning_rate_decay_start = 300000
+local learning_rate_decay_every = 50000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
@@ -32,7 +33,7 @@ local experiment_id = string.format(
   '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
 )
 local checkpoint_path = string.format(
-  '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
+  '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
 )
 
 cmd = torch.CmdLine()
@@ -66,7 +67,10 @@ cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
 cmd:option('-seq_length', seq_length,
   'number of seq. length (without EOS/SOS token)')
-cmd:option('-rnn_activation
+cmd:option('-rnn_type', rnn_type,
+  'rnn type [rnn | lstm | gru]')
+cmd:option('-rnn_activation', rnn_activation,
+  'activation for LSTM/RNN [tanh | relu | none]')
 
 -- Optimization: General
 cmd:option('-max_iters', -1, 
@@ -75,7 +79,7 @@ cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
 cmd:option('-grad_clip',0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
-cmd:option('-drop_prob_lm', 0.5, 
+cmd:option('-drop_prob_lm', drop_prob_lm, 
   'strength of dropout in the Language Model RNN')
 cmd:option('-finetune_cnn_after', finetune_cnn_after, 
   'After what iteration do we start finetuning the CNN? (-1 = disable; never finetune, 0 = finetune from start)')
@@ -87,9 +91,9 @@ cmd:option('-optim','adam',
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 cmd:option('-learning_rate', learning_rate,
   'learning rate')
-cmd:option('-learning_rate_decay_start', -1, 
+cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
-cmd:option('-learning_rate_decay_every', 50000, 
+cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
   'every how many iterations thereafter to drop LR by half?')
 cmd:option('-optim_alpha',0.8,
   'alpha for adagrad/rmsprop/momentum/adam')
@@ -111,26 +115,25 @@ cmd:option('-cnn_weight_decay', cnn_weight_decay,
   'L2 weight decay just for the CNN')
 
 -- Evaluation/Checkpointing
-cmd:option('-train_samples', total_samples_train - total_samples_test, 
+cmd:option('-train_samples', total_samples_train - total_samples_valid, 
   '# of samples in training set')
-cmd:option('-val_images_use', total_samples_test, 
+cmd:option('-val_images_use', total_samples_valid, 
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor((total_samples_train-total_samples_test)/batch_size/4.0), 
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train-total_samples_valid)/batch_size/4.0), 
   'how often to save a model checkpoint?')
-cmd:option('-checkpoint_path', '/storage/coco/checkpoints', 
+cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 1, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
-cmd:option('-losses_log_every', 25, 
+cmd:option('-losses_log_every', 0, 
   'How often do we snapshot losses (in loss_history), for inclusion in the progress dump? (0 = disable)')
 
 -- misc
-cmd:option('-backend', 'cudnn', 'nn|cudnn')
 cmd:option('-id', experiment_id, 
   'an id identifying this run/job. used in cross-val and appended when writing progress files')
 cmd:option('-seed', 123, 
   'random number generator seed to use')
-cmd:option('-gpuid', gpuid, 
+cmd:option('-gpuid', 0, 
   'which gpu to use. -1 = use CPU')
 cmd:option('-display', 5,
   'display interval for train steps')

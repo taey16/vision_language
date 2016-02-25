@@ -17,7 +17,7 @@ function layer:__init(opt)
   self.rnn_size = utils.getopt(opt, 'rnn_size')
   self.num_layers = utils.getopt(opt, 'num_layers')
   self.rnn_type = utils.getopt(opt, 'rnn_type')
-  self.activation = utils.getopt(opt, 'activation')
+  self.activation = utils.getopt(opt, 'rnn_activation')
   local dropout = utils.getopt(opt, 'dropout', 0.5)
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')

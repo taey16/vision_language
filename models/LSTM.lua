@@ -47,8 +47,11 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
       in_transform = nn.Tanh(true)(n4)
     elseif activation == 'relu' then
       in_transform = nn.ReLU(true)(n4)
-    else
+    elseif activation == 'none' then
       in_transform = n4
+    else
+      io.flush(error(string.format(
+        'check rnn_activation: %s', activation)))
     end
       
     -- perform the LSTM update
@@ -58,7 +61,7 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
       })
     -- gated cells form the output
     local next_h
-    if activation == 'tahn' then
+    if activation == 'tanh' then
       next_h = nn.CMulTable()({out_gate, nn.Tanh(true)(next_c)})
     elseif activation == 'relu' then
       next_h = nn.CMulTable()({out_gate, nn.ReLU(true)(next_c)})

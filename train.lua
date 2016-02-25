@@ -18,12 +18,11 @@ require 'optim'
 require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_inception-v3.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
---local opt = paths.dofile('opts/opt_coco_inception7.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
@@ -67,7 +66,7 @@ else
   end
   lmOpt.seq_length = opt.seq_length
   lmOpt.batch_size = opt.batch_size * opt.seq_per_img
-  lmOpt.lstm_activation = opt.lstm_activation
+  lmOpt.rnn_activation = opt.rnn_activation
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
   -- initialize the ConvNet
