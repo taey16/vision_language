@@ -3,7 +3,7 @@ require 'cunn'
 require 'cudnn'
 
 local utils = require 'misc.utils'
---local image_utils = require 'misc.image_utils' 
+local image_utils = require 'misc.image_utils' 
 local net_utils = {}
 
 net_utils.cnn_model_mean = 

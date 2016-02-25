@@ -19,12 +19,14 @@ local torch_model=
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local flip_jitter = 1
+local flip_jitter = 0
+
 local rnn_size = 256
 local num_rnn_layers = 2
+local seq_length = 2
 local input_encoding_size = 2048
-local rnn_activation = 'tanh'
-local rnn_type = 'lstm'
+local rnn_activation = 'relu'
+local rnn_type = 'rnn'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
@@ -40,7 +42,7 @@ local experiment_id = string.format(
   '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
 )
 local checkpoint_path = string.format(
-  '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid
+  '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
 )
 
 cmd = torch.CmdLine()
@@ -59,7 +61,7 @@ cmd:option('-image_size', image_size,
 cmd:option('-crop_size', crop_size, 
   'size of croped input image')
 cmd:option('-flip_jitter', flip_jitter, 
-  'size of croped input image')
+  'flag for flipping [0 | 1 ]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 
@@ -70,6 +72,8 @@ cmd:option('-input_encoding_size',input_encoding_size,
   'the encoding size of each token in the vocabulary, and the image.')
 cmd:option('-num_rnn_layers', num_rnn_layers,
   'number of stacks of rnn layers')
+cmd:option('-seq_length', seq_length,
+  'number of seq. length (without EOS/SOS token)')
 cmd:option('-rnn_activation', rnn_activation,
   'activation for LSTM/RNN [tanh | relu | none]')
 
@@ -78,7 +82,7 @@ cmd:option('-max_iters', -1,
   'max number of iterations to run for (-1 = run forever)')
 cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
-cmd:option('-grad_clip',0.1,
+cmd:option('-grad_clip', 0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
 cmd:option('-drop_prob_lm', drop_prob_lm, 
   'strength of dropout in the Language Model RNN')

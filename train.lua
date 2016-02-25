@@ -55,7 +55,12 @@ else
   lmOpt.rnn_size = opt.rnn_size
   lmOpt.num_layers = opt.num_rnn_layers
   lmOpt.dropout = opt.drop_prob_lm
-  lmOpt.seq_length = loader:getSeqLength()
+  data_seq_length = loader:getSeqLength()
+  if data_seq_length ~= opt.seq_length then
+    io.flush(print(string.format(
+      'data_seq_length: %d, opt.seq_length: %d', data_seq_length, opt.seq_length)))
+  end
+  lmOpt.seq_length = opt.seq_length
   lmOpt.batch_size = opt.batch_size * opt.seq_per_img
   lmOpt.lstm_activation = opt.lstm_activation
   lmOpt.rnn_type = opt.rnn_type
@@ -121,6 +126,7 @@ local function eval_split(split, evalopt)
   local loss_sum = 0
   local logprobs_sum = 0
   local perplexity = 0
+  local accuracy = 0
   local loss_evals = 0
   local predictions = {}
   local vocab = loader:getVocab()
@@ -134,6 +140,8 @@ local function eval_split(split, evalopt)
       seq_per_img = opt.seq_per_img
     }
 
+    data.labels = data.labels[{{1,opt.seq_length},{}}]
+
     -- preprocess in place, and don't augment
     data.images = net_utils.preprocess(
       data.images, opt.crop_size, false, opt.flip_jitter
@@ -145,9 +153,11 @@ local function eval_split(split, evalopt)
     local expanded_feats = protos.expander:forward(feats)
     local logprobs = protos.lm:forward{expanded_feats, data.labels}
     local loss = protos.crit:forward(logprobs, data.labels)
+    local acc = protos.crit:accuracy(logprobs, data.labels)
     loss_sum = loss_sum + loss
     --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
+    accuracy = accuracy + acc[2]
 
     -- forward the model to also get generated samples for each image
     local seq = protos.lm:sample(feats)
@@ -167,7 +177,7 @@ local function eval_split(split, evalopt)
     local ix1 = math.min(data.bounds.it_max, val_images_use)
     if verbose then
       io.flush(print(string.format(
-        'evaluating validation performance... %d/%d (%f)', ix0-1, ix1, loss
+        'evaluating validation performance... %d/%d (%f, %f)', ix0-1, ix1, loss, acc[2]
       )))
     end
 
@@ -184,7 +194,7 @@ local function eval_split(split, evalopt)
     lang_stats = net_utils.language_eval(predictions, opt.id)
   end
 
-  return loss_sum/loss_evals, predictions, lang_stats, perplexity
+  return loss_sum/loss_evals, predictions, lang_stats, perplexity, accuracy/loss_evals
 end
 
 -------------------------------------------------------------------------------
@@ -208,6 +218,8 @@ local function lossFun(finetune_cnn)
     split = 'train', 
     seq_per_img = opt.seq_per_img
   }
+
+  data.labels = data.labels[{{1,opt.seq_length},{}}]
   -- preproces in-place, data augment in training
   data.images = net_utils.preprocess(
     data.images, opt.crop_size, true, opt.flip_jitter
@@ -227,6 +239,7 @@ local function lossFun(finetune_cnn)
   -- compute perplexity
   --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
   local perplexity = 0
+  local accuracy = protos.crit:accuracy(logprobs, data.labels)
   
   -----------------------------------------------------------------------------
   -- Backward pass
@@ -255,7 +268,7 @@ local function lossFun(finetune_cnn)
   -----------------------------------------------------------------------------
 
   -- and lets get out!
-  local losses = { total_loss = loss, total_perplexity = perplexity }
+  local losses = { total_loss = loss, total_perplexity = perplexity, accuracy=accuracy}
   return losses
 end
 
@@ -337,9 +350,9 @@ while true do
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
     io.flush(print(string.format(
-      '%d/%d: %.2f, trn loss: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
+      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
       iter, number_of_batches, epoch,
-      losses.total_loss, losses.total_perplexity,
+      losses.total_loss, losses.accuracy[2], losses.total_perplexity,
       learning_rate, cnn_learning_rate, 
       tostring(finetune_cnn), opt.optim, elapsed_trn
     )))
@@ -356,11 +369,11 @@ while true do
 
     local start_tst = tm:time().real
     -- evaluate the validation performance
-    local val_loss, val_predictions, lang_stats, perplexity = 
+    local val_loss, val_predictions, lang_stats, perplexity, val_accuracy = 
       eval_split('val', {val_images_use = opt.val_images_use})
     local elapsed_tst = tm:time().real
     io.flush( print(string.format(
-        'validation loss: %f, perplexity: %f', val_loss, perplexity
+        'validation loss: %f, perplexity: %f, accuracy: %f', val_loss, perplexity, val_accuracy
     )))
     --print(lang_stats)
     val_loss_history[iter] = val_loss
