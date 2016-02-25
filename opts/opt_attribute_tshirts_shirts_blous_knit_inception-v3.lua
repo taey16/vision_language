@@ -25,15 +25,15 @@ local rnn_size = 256
 local num_rnn_layers = 2
 local seq_length = 2
 local input_encoding_size = 2048
-local rnn_activation = 'relu'
-local rnn_type = 'rnn'
+local rnn_activation = 'tanh'
+local rnn_type = 'lstm'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
-local learning_rate_decay_start = 100000
-local learning_rate_decay_every = 50000
+local learning_rate_decay_start = 50000
+local learning_rate_decay_every = 25000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
