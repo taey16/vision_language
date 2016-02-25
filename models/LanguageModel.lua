@@ -338,7 +338,7 @@ function layer:updateOutput(input)
       -- feed in the images
       xt = imgs -- NxK sized input
     elseif t == 2 then
-      -- feed in the start tokens
+      -- feed in the start tokens (i.e. <BOS>)
       local it = torch.LongTensor(batch_size):fill(self.vocab_size+1)
       self.lookup_tables_inputs[t] = it
       xt = self.lookup_tables[t]:forward(it) -- NxK sized input (token embedding vectors)

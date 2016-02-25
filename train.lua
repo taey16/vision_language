@@ -136,7 +136,7 @@ local function eval_split(split, evalopt)
 
     -- preprocess in place, and don't augment
     data.images = net_utils.preprocess(
-      data.images, opt.crop_size, false, opt.gpuid >= 0
+      data.images, opt.crop_size, false, opt.flip_jitter
     )
     n = n + data.images:size(1)
 
@@ -210,7 +210,7 @@ local function lossFun(finetune_cnn)
   }
   -- preproces in-place, data augment in training
   data.images = net_utils.preprocess(
-    data.images, opt.crop_size, true, opt.gpuid >= 0
+    data.images, opt.crop_size, true, opt.flip_jitter
   )
 
   -- data.images: Nx3xopt.image_sizexopt.image_size

@@ -19,22 +19,25 @@ local torch_model=
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local rnn_size = 192
-local num_rnn_layers = 3
+local flip_jitter = 1
+local rnn_size = 256
+local num_rnn_layers = 2
 local input_encoding_size = 2048
-local rnn_activation = 'relu'
+local rnn_activation = 'tanh'
 local rnn_type = 'lstm'
+local drop_prob_lm = 0.5
 
 local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
+local learning_rate_decay_start = 100000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_%s_act_%s_encode%d_layer%d_dropout5e-1_lr%e', batch_size, rnn_type, rnn_activation, rnn_size, num_rnn_layers, learning_rate
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d/', dataset_name, total_samples_train, total_samples_valid
@@ -54,6 +57,8 @@ cmd:option('-torch_model', torch_model,
 cmd:option('-image_size', image_size, 
   'size of input image')
 cmd:option('-crop_size', crop_size, 
+  'size of croped input image')
+cmd:option('-flip_jitter', flip_jitter, 
   'size of croped input image')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
@@ -75,7 +80,7 @@ cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
 cmd:option('-grad_clip',0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
-cmd:option('-drop_prob_lm', 0.5, 
+cmd:option('-drop_prob_lm', drop_prob_lm, 
   'strength of dropout in the Language Model RNN')
 cmd:option('-finetune_cnn_after', finetune_cnn_after, 
   'After what iteration do we start finetuning the CNN? (-1 = disable; never finetune, 0 = finetune from start)')
@@ -87,7 +92,7 @@ cmd:option('-optim','adam',
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 cmd:option('-learning_rate', learning_rate,
   'learning rate')
-cmd:option('-learning_rate_decay_start', -1, 
+cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', 50000, 
   'every how many iterations thereafter to drop LR by half?')
