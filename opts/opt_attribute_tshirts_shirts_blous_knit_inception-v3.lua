@@ -19,7 +19,8 @@ local torch_model=
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local flip_jitter = 0
+local crop_jitter = true
+local flip_jitter = false
 
 local rnn_size = 256
 local num_rnn_layers = 2

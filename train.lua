@@ -18,11 +18,11 @@ require 'optim'
 require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_inception-v3.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
@@ -144,11 +144,11 @@ local function eval_split(split, evalopt)
       seq_per_img = opt.seq_per_img
     }
 
-    data.labels = data.labels[{{1,opt.seq_length},{}}]
+    --data.labels = data.labels[{{1,opt.seq_length},{}}]
 
     -- preprocess in place, and don't augment
     data.images = net_utils.preprocess(
-      data.images, opt.crop_size, false, opt.flip_jitter
+      data.images, opt.crop_size, false, false
     )
     n = n + data.images:size(1)
 
@@ -223,10 +223,11 @@ local function lossFun(finetune_cnn)
     seq_per_img = opt.seq_per_img
   }
 
-  data.labels = data.labels[{{1,opt.seq_length},{}}]
+  --data.labels = data.labels[{{1,opt.seq_length},{}}]
+
   -- preproces in-place, data augment in training
   data.images = net_utils.preprocess(
-    data.images, opt.crop_size, true, opt.flip_jitter
+    data.images, opt.crop_size, opt.crop_jitter, opt.flip_jitter
   )
 
   -- data.images: Nx3xopt.image_sizexopt.image_size

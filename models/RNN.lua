@@ -2,7 +2,6 @@ require 'nn'
 require 'nngraph'
 
 local RNN = {}
-
 function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activation)
   dropout = dropout or 0.5
   
@@ -28,13 +27,13 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
       input_size_L = rnn_size
     end
     -- RNN tick
-    local i2h = nn.Linear(input_size_L, rnn_size)(x)
-    local h2h = nn.Linear(rnn_size, rnn_size)(prev_h)
+    local i2h = nn.Linear(input_size_L, rnn_size)(x):annotate{name='i2h_'..L}
+    local h2h = nn.Linear(rnn_size, rnn_size)(prev_h):annotate{name='h2h_'..L}
     local next_h
     if activation == 'tanh' then
-      next_h = nn.Tanh(true)(nn.CAddTable(){i2h, h2h})
+      next_h = nn.Tanh()(nn.CAddTable(){i2h, h2h})
     elseif activation == 'relu' then
-      next_h = nn.ReLU(true)(nn.CAddTable(){i2h, h2h})
+      next_h = nn.ReLU()(nn.CAddTable(){i2h, h2h})
     elseif activation == 'none' then
       next_h = nn.CAddTable(){i2h, h2h}
     else

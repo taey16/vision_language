@@ -38,15 +38,15 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
     local reshaped = nn.Reshape(4, rnn_size)(all_input_sums)
     local n1, n2, n3, n4 = nn.SplitTable(2)(reshaped):split(4)
     -- decode the gates
-    local in_gate    = nn.Sigmoid(true)(n1)
-    local forget_gate= nn.Sigmoid(true)(n2)
-    local out_gate   = nn.Sigmoid(true)(n3)
+    local in_gate    = nn.Sigmoid()(n1)
+    local forget_gate= nn.Sigmoid()(n2)
+    local out_gate   = nn.Sigmoid()(n3)
     -- decode the write inputs
     local in_transform
     if activation == 'tanh' then
-      in_transform = nn.Tanh(true)(n4)
+      in_transform = nn.Tanh()(n4)
     elseif activation == 'relu' then
-      in_transform = nn.ReLU(true)(n4)
+      in_transform = nn.ReLU()(n4)
     elseif activation == 'none' then
       in_transform = n4
     else
@@ -62,9 +62,9 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
     -- gated cells form the output
     local next_h
     if activation == 'tanh' then
-      next_h = nn.CMulTable()({out_gate, nn.Tanh(true)(next_c)})
+      next_h = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
     elseif activation == 'relu' then
-      next_h = nn.CMulTable()({out_gate, nn.ReLU(true)(next_c)})
+      next_h = nn.CMulTable()({out_gate, nn.ReLU()(next_c)})
     elseif activation == 'none' then
       next_h = nn.CMulTable()({out_gate, next_c})
     else

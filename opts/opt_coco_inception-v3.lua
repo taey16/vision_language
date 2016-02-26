@@ -9,11 +9,12 @@ local torch_model=
   '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
-local flip_jitter = 0
+local flip_jitter = false
+local crop_jitter = true
 
 local rnn_size = 384
 local num_rnn_layers = 3
-local seq_length = -1
+local seq_length = 16
 local input_encoding_size = 2048
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
@@ -68,7 +69,7 @@ cmd:option('-num_rnn_layers', num_rnn_layers,
 cmd:option('-seq_length', seq_length,
   'number of seq. length (without EOS/SOS token)')
 cmd:option('-rnn_type', rnn_type,
-  'rnn type [rnn | lstm | gru]')
+  'rnn type [rnn | lstm | gru | SCRNN(shortcut-RNN)]')
 cmd:option('-rnn_activation', rnn_activation,
   'activation for LSTM/RNN [tanh | relu | none]')
 

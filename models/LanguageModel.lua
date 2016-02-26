@@ -2,6 +2,9 @@ require 'nn'
 local utils = require 'misc.utils'
 local net_utils = require 'misc.net_utils'
 local LSTM = require 'models.LSTM'
+local GRU = require 'models.GRU'
+local SCRNN = require 'models.SCRNN'
+local RNN = require 'models.RNN'
 
 -------------------------------------------------------------------------------
 -- Language Model core
@@ -28,6 +31,8 @@ function layer:__init(opt)
     self.core = GRU.gru(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
   elseif self.rnn_type == 'rnn' then
     self.core = RNN.rnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+  elseif self.rnn_type == 'scrnn' then
+    self.core = SCRNN.scrnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   else
     io.flush(error(string.format(
       'Correct rnn_type: %s', self.rnn_type)))
@@ -41,15 +46,31 @@ function layer:_createInitState(batch_size)
   assert(batch_size ~= nil, 'batch size must be provided')
   -- construct the initial state for the LSTM
   if not self.init_state then self.init_state = {} end -- lazy init
-  for h=1,self.num_layers*2 do
-    -- note, the init state Must be zeros because we are using init_state to init grads in backward call too
-    if self.init_state[h] then
-      if self.init_state[h]:size(1) ~= batch_size then
-        self.init_state[h]:resize(batch_size, self.rnn_size):zero() -- expand the memory
+
+  if self.rnn_type == 'lstm' then
+    for h=1,self.num_layers*2 do
+      -- note, the init state Must be zeros because we are using init_state to init grads in backward call too
+      if self.init_state[h] then
+        if self.init_state[h]:size(1) ~= batch_size then
+          self.init_state[h]:resize(batch_size, self.rnn_size):zero() -- expand the memory
+        end
+      else
+        self.init_state[h] = torch.zeros(batch_size, self.rnn_size)
       end
-    else
-      self.init_state[h] = torch.zeros(batch_size, self.rnn_size)
     end
+  elseif self.rnn_type == 'rnn' or self.rnn_type == 'scrnn' or self.rnn_type == 'gru' then
+    for h=1,self.num_layers do
+      if self.init_state[h] then
+        if self.init_state[h]:size(1) ~= batch_size then
+          self.init_state[h]:resize(batch_size, self.rnn_size):zero()
+        end
+      else
+        self.init_state[h] = torch.zeros(batch_size, self.rnn_size)
+      end
+    end
+  else
+    io.flush(error(string.format(
+      'Correct rnn_type: %s', self.rnn_type)))
   end
   self.num_state = #self.init_state
 end
