@@ -79,7 +79,7 @@ function net_utils.preprocess(imgs, crop_size, data_augment, flip_jitter)
     -- crop.
     imgs = imgs[{ {}, {}, {yoff,yoff+cnn_input_size-1}, {xoff,xoff+cnn_input_size-1} }]
   end
-  if flip_jitter == 1 then
+  if flip_jitter == true then
     imgs = image_utils.random_flip(imgs)
   end
   imgs = torch.div(imgs:float(), 255.0)

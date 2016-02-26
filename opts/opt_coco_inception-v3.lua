@@ -12,9 +12,9 @@ local crop_size = 299
 local flip_jitter = false
 local crop_jitter = true
 
-local rnn_size = 384
-local num_rnn_layers = 3
-local seq_length = 16
+local rnn_size = 256
+local num_rnn_layers = 2
+local seq_length = -1
 local input_encoding_size = 2048
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
@@ -31,7 +31,7 @@ local cnn_weight_decay = 0.0000001
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
 )
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
@@ -54,8 +54,10 @@ cmd:option('-image_size', image_size,
   'size of input image')
 cmd:option('-crop_size', crop_size, 
   'size of croped input image')
+cmd:option('-crop_jitter', crop_jitter,
+  'flag for flipping [true | false]')
 cmd:option('-flip_jitter', flip_jitter,
-  'flag for flipping [0 | 1]')
+  'flag for flipping [true | false]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 

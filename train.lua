@@ -144,7 +144,7 @@ local function eval_split(split, evalopt)
       seq_per_img = opt.seq_per_img
     }
 
-    --data.labels = data.labels[{{1,opt.seq_length},{}}]
+    data.labels = data.labels[{{1,opt.seq_length},{}}]
 
     -- preprocess in place, and don't augment
     data.images = net_utils.preprocess(
@@ -223,7 +223,7 @@ local function lossFun(finetune_cnn)
     seq_per_img = opt.seq_per_img
   }
 
-  --data.labels = data.labels[{{1,opt.seq_length},{}}]
+  data.labels = data.labels[{{1,opt.seq_length},{}}]
 
   -- preproces in-place, data augment in training
   data.images = net_utils.preprocess(
