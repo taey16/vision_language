@@ -2,7 +2,6 @@ require 'nn'
 require 'nngraph'
 
 local SCRNN = {}
-
 function SCRNN.scrnn(input_size, output_size, rnn_size, num_layer, dropout, activation)
   dropout = dropout or 0.5
   
@@ -61,7 +60,7 @@ function SCRNN.scrnn(input_size, output_size, rnn_size, num_layer, dropout, acti
   if dropout > 0 then 
     top_h = nn.Dropout(dropout)(top_h):annotate{name='drop_final'}
   end
-  local proj = nn.Linear(rnn_size, input_size)(top_h):annotate{name='decoder'}
+  local proj = nn.Linear(rnn_size, output_size)(top_h):annotate{name='decoder'}
   local logsoft = nn.LogSoftMax()(proj)
   table.insert(outputs, logsoft)
 

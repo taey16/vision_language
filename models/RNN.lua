@@ -23,7 +23,7 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
       x = outputs[L-1] 
       if dropout > 0 then 
         x = nn.Dropout(dropout)(x):annotate{name='drop_'..L}
-       end -- apply dropout, if any
+       end
       input_size_L = rnn_size
     end
     -- RNN tick
@@ -48,7 +48,7 @@ function RNN.rnn(input_size, output_size, rnn_size, num_layer, dropout, activati
   if dropout > 0 then 
     top_h = nn.Dropout(dropout)(top_h):annotate{name='drop_final'}
   end
-  local proj = nn.Linear(rnn_size, input_size)(top_h):annotate{name='decoder'}
+  local proj = nn.Linear(rnn_size, output_size)(top_h):annotate{name='decoder'}
   local logsoft = nn.LogSoftMax()(proj)
   table.insert(outputs, logsoft)
 

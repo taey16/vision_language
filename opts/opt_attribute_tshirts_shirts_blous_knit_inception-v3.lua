@@ -24,10 +24,10 @@ local flip_jitter = false
 
 local rnn_size = 256
 local num_rnn_layers = 2
-local seq_length = 2
+local seq_length = -1
 local input_encoding_size = 2048
-local rnn_activation = 'tanh'
-local rnn_type = 'lstm'
+local rnn_type = 'scrnn'
+local rnn_activation = 'relu'
 local drop_prob_lm = 0.5
 
 local batch_size = 16

@@ -21,7 +21,7 @@ function layer:__init(opt)
   self.num_layers = utils.getopt(opt, 'num_layers')
   self.rnn_type = utils.getopt(opt, 'rnn_type')
   self.activation = utils.getopt(opt, 'rnn_activation')
-  local dropout = utils.getopt(opt, 'dropout', 0.5)
+  local dropout = utils.getopt(opt, 'dropout')
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core lstm network. note +1 for both the START and END tokens
@@ -395,6 +395,7 @@ function layer:updateOutput(input)
       -- forward the network
       local out = self.clones[t]:forward(self.inputs[t])
       -- process the outputs
+      -- out: seq_length x batchsize x voca_size+1
       self.output[t] = out[self.num_state+1] -- last element is the output vector
       self.state[t] = {} -- the rest is state
       for i=1,self.num_state do table.insert(self.state[t], out[i]) end
