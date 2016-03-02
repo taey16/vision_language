@@ -18,11 +18,11 @@ require 'optim'
 require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_inception-v3.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
@@ -42,9 +42,6 @@ if string.len(opt.start_from) > 0 then
   protos.expander = nn.FeatExpander(opt.seq_per_img) -- not in checkpoints, create manually
   cudnn.convert(protos.cnn, cudnn)
   print(protos.cnn)
-  print(protos.lm)
-  print(protos.expander)
-  print(protos.crit)
 else
   -- create protos from scratch
   -- intialize language model
@@ -79,6 +76,7 @@ else
   protos.expander = nn.FeatExpander(opt.seq_per_img)
   -- criterion for the language model
   protos.crit = nn.LanguageModelCriterion()
+  cudnn.convert(protos.cnn, cudnn)
 end
 
 -- ship everything to GPU, maybe
