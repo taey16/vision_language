@@ -23,15 +23,16 @@ local drop_prob_lm = 0.5
 local batch_size = 16
 local finetune_cnn_after = -1
 local learning_rate = 4e-4
-local learning_rate_decay_start = 300000
-local learning_rate_decay_every = 50000
+local learning_rate_decay_seed = 0.5
+local learning_rate_decay_start= 300000
+local learning_rate_decay_every= 50000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start, learning_rate_decay_seed, learning_rate_decay_every
 )
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
@@ -94,6 +95,8 @@ cmd:option('-optim','adam',
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 cmd:option('-learning_rate', learning_rate,
   'learning rate')
+cmd:option('-learning_rate_decay_seed', learning_rate_decay_seed,
+  'decay_factor = math.pow(opt.learning_rate_decay_seed, frac)')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 

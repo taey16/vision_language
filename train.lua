@@ -42,6 +42,9 @@ if string.len(opt.start_from) > 0 then
   protos.expander = nn.FeatExpander(opt.seq_per_img) -- not in checkpoints, create manually
   cudnn.convert(protos.cnn, cudnn)
   print(protos.cnn)
+  print(protos.lm)
+  print(protos.expander)
+  print(protos.crit)
 else
   -- create protos from scratch
   -- intialize language model
@@ -76,7 +79,6 @@ else
   protos.expander = nn.FeatExpander(opt.seq_per_img)
   -- criterion for the language model
   protos.crit = nn.LanguageModelCriterion()
-  cudnn.convert(protos.cnn, cudnn)
 end
 
 -- ship everything to GPU, maybe
@@ -155,11 +157,13 @@ local function eval_split(split, evalopt)
     local expanded_feats = protos.expander:forward(feats)
     local logprobs = protos.lm:forward{expanded_feats, data.labels}
     local loss = protos.crit:forward(logprobs, data.labels)
-    local acc = protos.crit:accuracy(logprobs, data.labels)
+    local acc, pplx = 0, 0
+    acc, pplx = protos.crit:accuracy(logprobs, data.labels)
     loss_sum = loss_sum + loss
     --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
     accuracy = accuracy + acc[2]
+    perplexity = perplexity + pplx
 
     -- forward the model to also get generated samples for each image
     local seq = protos.lm:sample(feats)
@@ -179,7 +183,7 @@ local function eval_split(split, evalopt)
     local ix1 = math.min(data.bounds.it_max, val_images_use)
     if verbose then
       io.flush(print(string.format(
-        'evaluating validation performance... %d/%d (%f, %f)', ix0-1, ix1, loss, acc[2]
+        'evaluating validation performance... %d/%d (%f, %f, %f)', ix0-1, ix1, loss, acc[2], pplx
       )))
     end
 
@@ -196,7 +200,7 @@ local function eval_split(split, evalopt)
     lang_stats = net_utils.language_eval(predictions, opt.id)
   end
 
-  return loss_sum/loss_evals, predictions, lang_stats, perplexity, accuracy/loss_evals
+  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
 end
 
 -------------------------------------------------------------------------------
@@ -241,8 +245,8 @@ local function lossFun(finetune_cnn)
   local loss = protos.crit:forward(logprobs, data.labels)
   -- compute perplexity
   --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
-  local perplexity = 0
-  local accuracy = protos.crit:accuracy(logprobs, data.labels)
+  local perplexity, accuracy = 0, 0
+  accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
   
   -----------------------------------------------------------------------------
   -- Backward pass
@@ -314,7 +318,7 @@ while true do
   local cnn_learning_rate = opt.cnn_learning_rate
   if iter > opt.learning_rate_decay_start and opt.learning_rate_decay_start >= 0 then
     local frac = (iter - opt.learning_rate_decay_start) / opt.learning_rate_decay_every
-    local decay_factor = math.pow(0.5, frac)
+    local decay_factor = math.pow(opt.learning_rate_decay_seed, frac)
     learning_rate = learning_rate * decay_factor -- set the decayed rate
     cnn_learning_rate = cnn_learning_rate * decay_factor
   end

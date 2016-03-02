@@ -1,4 +1,5 @@
 require 'nn'
+require 'cephes' -- for cephes.log2
 local utils = require 'misc.utils'
 local net_utils = require 'misc.net_utils'
 local LSTM = require 'models.LSTM'
@@ -510,6 +511,7 @@ function crit:accuracy(input, seq)
 
   -- hit count for opt.seq_length and <EOS> token
   local hit_count = torch.FloatTensor(D+1):fill(0)
+  local perplexity = 0
   local n = 0
   for b=1,N do -- iterate over batches
     local first_time = true
@@ -536,7 +538,7 @@ function crit:accuracy(input, seq)
         if predicted_word_label[1] == target_index then
           -- accumulate 
           hit_count[t-1] = hit_count[t-1] + 1
-          --print(hit_count[t-1])
+          perplexity = perplexity - cephes.log2(prob:squeeze())
         end
       end
     end
@@ -544,5 +546,6 @@ function crit:accuracy(input, seq)
   end
   -- nomalize by number of predictions that were made
   local accuracy = hit_count:div(n)
-  return accuracy
+  perplexity = cephes.pow(2.0, perplexity / (L-1) / n )
+  return accuracy, perplexity
 end
