@@ -131,16 +131,12 @@ cmd:option('-checkpoint_path', checkpoint_path,
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 1, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
-cmd:option('-losses_log_every', 0, 
-  'How often do we snapshot losses (in loss_history), for inclusion in the progress dump? (0 = disable)')
 
 -- misc
 cmd:option('-id', experiment_id, 
   'an id identifying this run/job. used in cross-val and appended when writing progress files')
 cmd:option('-seed', 123, 
   'random number generator seed to use')
-cmd:option('-gpuid', 0, 
-  'which gpu to use. -1 = use CPU')
 cmd:option('-display', 5,
   'display interval for train steps')
 

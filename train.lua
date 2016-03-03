@@ -82,9 +82,7 @@ else
 end
 
 -- ship everything to GPU, maybe
-if opt.gpuid >= 0 then
-  for k,v in pairs(protos) do v:cuda() end
-end
+for k,v in pairs(protos) do v:cuda() end
 
 -- flatten and prepare all model parameters to a single vector. 
 -- Keep CNN params separate in case we want to try to get fancy with different optims on LM/CNN
@@ -293,9 +291,6 @@ local loss0
 local number_of_batches = opt.train_samples / opt.batch_size
 local optim_state = {}
 local cnn_optim_state = {}
-local loss_history = {}
-local val_lang_stats_history = {}
-local val_loss_history = {}
 local best_score
 local tm = torch.Timer()
 
@@ -309,9 +304,6 @@ while true do
 
   -- eval loss/gradient
   local losses = lossFun(finetune)
-  if iter % opt.losses_log_every == 0 then 
-    loss_history[iter] = losses.total_loss 
-  end
 
   -- decay the learning rate for both LM and CNN
   local learning_rate = opt.learning_rate
@@ -383,10 +375,6 @@ while true do
         'validation loss: %f, perplexity: %f, accuracy: %f', val_loss, perplexity, val_accuracy
     )))
     --print(lang_stats)
-    val_loss_history[iter] = val_loss
-    if lang_stats then
-      val_lang_stats_history[iter] = lang_stats
-    end
 
     local checkpoint_path = 
       path.join(opt.checkpoint_path, 'model_id' .. opt.id)
@@ -395,11 +383,8 @@ while true do
     local checkpoint = {}
     checkpoint.opt = opt
     checkpoint.iter = iter
-    checkpoint.loss_history = loss_history
-    checkpoint.val_loss_history = val_loss_history
     -- save these too for CIDEr/METEOR/etc eval
     checkpoint.val_predictions = val_predictions
-    checkpoint.val_lang_stats_history = val_lang_stats_history
 
     utils.write_json(checkpoint_path .. '.json', checkpoint)
     io.flush(print(
