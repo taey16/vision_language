@@ -123,12 +123,12 @@ def assign_splits(imgs, num_val = 4000, num_test = 0):
   num_test =num_test
 
   for i,img in enumerate(imgs):
-      if i < num_val:
-        img['split'] = 'val'
-      elif i < num_val + num_test: 
-        img['split'] = 'test'
-      else: 
-        img['split'] = 'train'
+    if i < num_val:
+      img['split'] = 'val'
+    elif i < num_val + num_test: 
+      img['split'] = 'test'
+    else: 
+      img['split'] = 'train'
 
   print 'assigned %d to val, %d to test.' % (num_val, num_test)
   sys.stdout.flush()
