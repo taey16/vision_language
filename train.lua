@@ -275,7 +275,7 @@ local function lossFun(finetune_cnn)
   -----------------------------------------------------------------------------
 
   -- and lets get out!
-  local losses = { total_loss = loss, total_perplexity = perplexity, accuracy=accuracy}
+  local losses = {total_loss = loss, total_perplexity = perplexity, accuracy = accuracy}
   return losses
 end
 
