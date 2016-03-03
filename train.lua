@@ -15,7 +15,7 @@ require 'misc.optim_updates'
 require 'models.LanguageModel'
 require 'models.FeatExpander'
 require 'optim'
-require 'cephes' -- for cephes.log2
+--require 'cephes' -- for cephes.log2
 
 
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')

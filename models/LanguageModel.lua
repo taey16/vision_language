@@ -25,7 +25,7 @@ function layer:__init(opt)
   local dropout = utils.getopt(opt, 'dropout')
   -- options for Language Model
   self.seq_length = utils.getopt(opt, 'seq_length')
-  -- create the core lstm network. note +1 for both the START and END tokens
+  -- create the core rnn network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
     self.core = LSTM.lstm(self.input_encoding_size,self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   elseif self.rnn_type == 'gru' then
@@ -70,8 +70,8 @@ function layer:_createInitState(batch_size)
       end
     end
   else
-    io.flush(error(string.format(
-      'Correct rnn_type: %s', self.rnn_type)))
+    error(string.format(
+      'Correct rnn_type: %s', self.rnn_type))
   end
   self.num_state = #self.init_state
 end
@@ -512,11 +512,11 @@ function crit:accuracy(input, seq)
   -- hit count for opt.seq_length and <EOS> token
   local hit_count = torch.FloatTensor(D+1):fill(0)
   local perplexity = 0
+  local accuracy = 0
   local n = 0
   for b=1,N do -- iterate over batches
     local first_time = true
     for t=2,L do -- iterate over sequence time (ignore t=1, dummy forward for the image)
-
       -- fetch the index of the next token in the sequence
       local target_index
       if t-1 > D then -- we are out of bounds of the index sequence: pad with null tokens
@@ -529,7 +529,6 @@ function crit:accuracy(input, seq)
         target_index = Mp1
         first_time = false
       end
-
       -- if there is a non-null next token, enforce accuracy
       if target_index ~= 0 then
         local output_cpu = input[{t,b,{}}]:float():exp()
@@ -545,7 +544,8 @@ function crit:accuracy(input, seq)
     n = n + 1
   end
   -- nomalize by number of predictions that were made
-  local accuracy = hit_count:div(n)
-  perplexity = cephes.pow(2.0, perplexity / (L-1) / n )
+  accuracy = hit_count:div(n)
+  perplexity = cephes.pow(2.0, perplexity / n )
   return accuracy, perplexity
 end
+
