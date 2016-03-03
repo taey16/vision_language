@@ -27,13 +27,17 @@ function layer:__init(opt)
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core rnn network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
-    self.core = LSTM.lstm(self.input_encoding_size,self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    self.core = LSTM.lstm(
+      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   elseif self.rnn_type == 'gru' then
-    self.core = GRU.gru(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
+    self.core = GRU.gru(
+      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
   elseif self.rnn_type == 'rnn' then
-    self.core = RNN.rnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    self.core = RNN.rnn(
+      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   elseif self.rnn_type == 'scrnn' then
-    self.core = SCRNN.scrnn(self.input_encoding_size,  self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    self.core = SCRNN.scrnn(
+      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
   else
     io.flush(error(string.format(
       'Correct rnn_type: %s', self.rnn_type)))
