@@ -76,12 +76,11 @@ else
   protos.crit = nn.LanguageModelCriterion()
 end
 
+cudnn.benchmark = true
+cudnn.fastest = true
 if #opt.gpus > 1 then
   protos.cnn = parallel_utils.makeDataParallel(protos.cnn, opt.gpus)
   print(protos.cnn)
-else
-  cudnn.benchmark = true
-  cudnn.fastest = true
 end
 
 -- ship everything to GPU, maybe
