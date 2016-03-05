@@ -26,6 +26,7 @@ local learning_rate = 4e-4
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
+local gpus = {1}
 local start_from = 
   ''
 local experiment_id = string.format(
@@ -116,6 +117,7 @@ cmd:option('-language_eval', 0,
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
 
 -- misc
+cmd:option('-gpus', gpus, '# of gpus for cnn')
 cmd:option('-id', experiment_id, 
   'an id identifying this run/job. used in cross-val and appended when writing progress files')
 cmd:option('-seed', 123, 
