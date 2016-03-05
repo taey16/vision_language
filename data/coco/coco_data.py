@@ -11,6 +11,7 @@ val  = json.load(open('annotations/captions_val2014.json', 'r'))
 train= json.load(open('annotations/captions_train2014.json', 'r'))
 dataset_root = '/storage/coco'
 
+import pdb; pdb.set_trace()
 print val.keys()
 print val['info']
 print len(val['images'])
@@ -30,7 +31,6 @@ for a in annots:
   itoa[imgid].append(a)
 
 # create the json blob
-import pdb; pdb.set_trace()
 out = []
 for i,img in enumerate(imgs):
   imgid = img['id']

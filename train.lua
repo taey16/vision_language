@@ -3,13 +3,11 @@ require 'nn'
 require 'cutorch'
 require 'cunn'
 require 'cudnn'
-cudnn.benchmark = true
-cudnn.fastest = true
-cudnn.verbose = true
 require 'nngraph'
 local path = require 'pl.path'
 local utils = require 'misc.utils'
 local net_utils = require 'misc.net_utils'
+local parallel_utils = require 'misc.parallel_utils'
 require 'misc.DataLoader'
 require 'misc.optim_updates'
 require 'models.LanguageModel'
@@ -42,9 +40,6 @@ if string.len(opt.start_from) > 0 then
   protos.expander = nn.FeatExpander(opt.seq_per_img) -- not in checkpoints, create manually
   cudnn.convert(protos.cnn, cudnn)
   print(protos.cnn)
-  print(protos.lm)
-  print(protos.expander)
-  print(protos.crit)
 else
   -- create protos from scratch
   -- intialize language model
@@ -81,6 +76,14 @@ else
   protos.crit = nn.LanguageModelCriterion()
 end
 
+if #opt.gpus > 1 then
+  protos.cnn = parallel_utils.makeDataParallel(protos.cnn, opt.gpus)
+  print(protos.cnn)
+else
+  cudnn.benchmark = true
+  cudnn.fastest = true
+end
+
 -- ship everything to GPU, maybe
 for k,v in pairs(protos) do v:cuda() end
 
@@ -91,7 +94,7 @@ local cnn_params, cnn_grad_params = protos.cnn:getParameters()
 print('total number of parameters in LM: ', params:nElement())
 print('total number of parameters in CNN: ', cnn_params:nElement())
 assert(params:nElement() == grad_params:nElement())
-assert(cnn_params:nElement() == cnn_grad_params:nElement())
+--assert(cnn_params:nElement() == cnn_grad_params:nElement())
 
 -- construct thin module clones that share parameters with the actual
 -- modules. These thin module will have no intermediates and will be used
@@ -100,7 +103,13 @@ local thin_lm = protos.lm:clone()
 -- TODO: we are assuming that LM has specific members! figure out clean way to get rid of, not modular.
 thin_lm.core:share(protos.lm.core, 'weight', 'bias')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
-local thin_cnn = protos.cnn:clone('weight', 'bias')
+--local thin_cnn = protos.cnn:clone('weight', 'bias')
+local thin_cnn
+if #opt.gpus > 1 then
+  thin_cnn = protos.cnn:get(1):clone('weight', 'bias')
+else
+  thin_cnn = protos.cnn:clone('weight', 'bias')
+end
 -- sanitize all modules of gradient storage so that we dont save big checkpoints
 net_utils.sanitize_gradients(thin_cnn)
 local lm_modules = thin_lm:getModulesList()

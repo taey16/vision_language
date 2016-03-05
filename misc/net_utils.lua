@@ -9,23 +9,21 @@ local net_utils = {}
 net_utils.cnn_model_mean = 
   -- for inception7~ResCeption
   --torch.FloatTensor{0.48429165393391, 0.45580376382619, 0.40397758524087}
-  -- for inception-v3-2015-12-05
+  -- for inception-v3-2015-12-05, resception
   torch.FloatTensor{0.4853717905167, 0.45622173301884, 0.4061366788954}
 net_utils.cnn_model_std = 
   -- for inception7~ResCeption
   --torch.FloatTensor{0.22523080791307, 0.22056471186989, 0.22048053881112}
-  -- for inception-v3-2015-12-05
+  -- for inception-v3-2015-12-05, resception
   torch.FloatTensor{0.22682182875849, 0.22206057852892, 0.22145828935297}
 
 
 function net_utils.build_cnn(opt)
-  local model_filename = utils.getopt(opt, 'model_filename', 
-    '/storage/ImageNet/ILSVRC2012/torch_cache/inception7/digits_gpu_2_lr0.045SatDec514:08:122015/model_40.bn_removed.t7')
-  local encoding_size = utils.getopt(opt, 'encoding_size', 512)
-  local original_model = torch.load(model_filename)
-  local vision_encoder = original_model:get(1)
-  --local vision_encoder = original_model:get(1):get(1)
-  vision_encoder:add(nn.View(2048))
+  local model_filename = utils.getopt(opt, 'model_filename')
+  local encoding_size = utils.getopt(opt, 'encoding_size')
+  local vision_encoder = torch.load(model_filename)
+  vision_encoder.modules[#vision_encoder] = nil
+  vision_encoder.modules[#vision_encoder] = nil
   --[[
   local cnn_part = nn.Sequential()
   cnn_part:add(vision_encoder)

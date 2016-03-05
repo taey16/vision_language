@@ -6,7 +6,8 @@ local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
+  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
@@ -29,6 +30,7 @@ local learning_rate_decay_every= 50000
 local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
+local gpus = {1}
 local start_from = 
   ''
 local experiment_id = string.format(
@@ -133,6 +135,7 @@ cmd:option('-language_eval', 1,
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
 
 -- misc
+cmd:option('-gpus', gpus, '# of gpus for cnn')
 cmd:option('-id', experiment_id, 
   'an id identifying this run/job. used in cross-val and appended when writing progress files')
 cmd:option('-seed', 123, 

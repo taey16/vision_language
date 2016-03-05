@@ -1,11 +1,11 @@
 require 'nn'
-require 'cephes' -- for cephes.log2
 local utils = require 'misc.utils'
 local net_utils = require 'misc.net_utils'
 local LSTM = require 'models.LSTM'
 local GRU = require 'models.GRU'
 local SCRNN = require 'models.SCRNN'
 local RNN = require 'models.RNN'
+--require 'cephes' -- for cephes.log2
 
 -------------------------------------------------------------------------------
 -- Language Model core
@@ -541,7 +541,8 @@ function crit:accuracy(input, seq)
         if predicted_word_label[1] == target_index then
           -- accumulate 
           hit_count[t-1] = hit_count[t-1] + 1
-          perplexity = perplexity - cephes.log2(prob:squeeze())
+          --perplexity = perplexity - cephes.log2(prob:squeeze())
+          perplexity = perplexity - math.log(prob:squeeze())
         end
       end
     end
@@ -549,7 +550,8 @@ function crit:accuracy(input, seq)
   end
   -- nomalize by number of predictions that were made
   accuracy = hit_count:div(n)
-  perplexity = cephes.pow(2.0, perplexity / n )
+  --perplexity = cephes.pow(2.0, perplexity / n )
+  perplexity = math.pow(2.0, perplexity / n )
   return accuracy, perplexity
 end
 
