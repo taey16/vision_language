@@ -6,7 +6,8 @@ local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
+  ''
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
@@ -17,27 +18,34 @@ local rnn_size = 384
 local num_rnn_layers = 3
 local seq_length = -1
 local input_encoding_size = 2048
-local rnn_type = 'rnn'
+local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
-local finetune_cnn_after = -1
-local learning_rate = 4e-4
+local finetune_cnn_after = 0 
+local learning_rate = 0.00001--4e-4
 local learning_rate_decay_seed = 0.5
-local learning_rate_decay_start= 300000
-local learning_rate_decay_every= 50000
-local cnn_learning_rate = 1e-5
-local cnn_weight_decay = 0.0000001
+local learning_rate_decay_start= 0--300000
+local learning_rate_decay_every= 10000--50000
+local cnn_learning_rate = 0.00001
+local cnn_weight_decay = 0.00001
 
-local gpus = {1}
+local gpus = {1,2}
 local start_from = 
-  ''
+  '/storage/coco/checkpoints/coco_123287_3200_seq_length-1/_inception-v3-2015-12-05_bn_removed_epoch33_bs16_flipfalse_croptrue_lstm_tanh_hidden384_layer3_dropout0.5_lr4.000000e-04_anneal_300000/model_id_inception-v3-2015-12-05_bn_removed_epoch33_bs16_flipfalse_croptrue_lstm_tanh_hidden384_layer3_dropout0.5_lr4.000000e-04_anneal_300000.t7'
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start, learning_rate_decay_seed, learning_rate_decay_every
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%f_start%d_every%d_finetune%d_cnnlr%e', 
+    batch_size, 
+    flip_jitter, crop_jitter, 
+    rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
+    learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every, 
+    finetune_cnn_after,
+    cnn_learning_rate
 )
 local checkpoint_path = string.format(
-  '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
+  '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', 
+    dataset_name, total_samples_train, total_samples_valid, seq_length
 )
 
 cmd = torch.CmdLine()
@@ -111,9 +119,9 @@ cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
 -- Optimization: for the CNN
-cmd:option('-cnn_optim','adam',
+cmd:option('-cnn_optim','sgdm',
   'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.8,
+cmd:option('-cnn_optim_alpha',0.9,
   'alpha for momentum of CNN')
 cmd:option('-cnn_optim_beta',0.999,
   'alpha for momentum of CNN')
