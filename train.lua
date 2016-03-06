@@ -311,7 +311,7 @@ while true do
   end
 
   -- eval loss/gradient
-  local losses = lossFun(finetune)
+  local losses = lossFun(finetune_cnn)
 
   -- decay the learning rate for both LM and CNN
   local learning_rate = opt.learning_rate
