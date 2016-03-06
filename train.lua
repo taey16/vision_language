@@ -104,6 +104,8 @@ thin_lm.core:share(protos.lm.core, 'weight', 'bias')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 --local thin_cnn = protos.cnn:clone('weight', 'bias')
 local thin_cnn
+cudnn.fastest = true
+cudnn.benchmark = true
 if #opt.gpus > 1 then
   thin_cnn = protos.cnn:get(1):clone('weight', 'bias')
 else
@@ -366,7 +368,7 @@ while true do
   end
 
   -- save checkpoint once in a while (or on final iteration)
-  if (iter % opt.save_checkpoint_every == 0 or iter == opt.max_iters) then
+  if (iter+1 % opt.save_checkpoint_every == 0 or iter == opt.max_iters) then
     logger_trn:add{
       ['time'] = elapsed_trn,
       ['iter'] = iter,
