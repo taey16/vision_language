@@ -265,7 +265,7 @@ local function lossFun(finetune_cnn)
   local dexpanded_feats, ddummy = 
     unpack(protos.lm:backward({expanded_feats, data.labels}, dlogprobs))
   -- backprop the CNN, but only if we are finetuning
-  if finetuen_cnn then
+  if finetune_cnn then
     local dfeats = protos.expander:backward(feats, dexpanded_feats)
     local dx = protos.cnn:backward(data.images, dfeats)
   end
@@ -313,7 +313,7 @@ while true do
   end
 
   -- eval loss/gradient
-  local losses = lossFun(finetune)
+  local losses = lossFun(finetune_cnn)
 
   -- decay the learning rate for both LM and CNN
   local learning_rate = opt.learning_rate
