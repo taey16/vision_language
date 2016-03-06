@@ -368,7 +368,7 @@ while true do
   end
 
   -- save checkpoint once in a while (or on final iteration)
-  if (iter+1 % opt.save_checkpoint_every == 0 or iter == opt.max_iters) then
+  if (iter % opt.save_checkpoint_every == 0 or iter == opt.max_iters) then
     logger_trn:add{
       ['time'] = elapsed_trn,
       ['iter'] = iter,
