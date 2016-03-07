@@ -361,11 +361,11 @@ while true do
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
     io.flush(print(string.format(
-      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
+      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, optim: %s, cnn_optim: %s, finetune: %s, %.3f', 
       iter, number_of_batches, epoch,
       losses.total_loss, losses.accuracy[2], losses.total_perplexity,
       learning_rate, cnn_learning_rate, 
-      tostring(finetune_cnn), opt.optim, elapsed_trn
+      opt.optim, opt.cnn_optim, tostring(finetune_cnn), elapsed_trn
     )))
   end
 
