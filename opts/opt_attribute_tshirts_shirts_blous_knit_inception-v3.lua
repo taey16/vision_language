@@ -36,7 +36,7 @@ local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start = 50000
 local learning_rate_decay_every = 25000
 local finetune_cnn_after = 0
-local cnn_optimizer = 'sgdm'
+local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001--4e-4
 local cnn_weight_decay = 0.0001
 
