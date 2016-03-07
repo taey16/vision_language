@@ -1,11 +1,11 @@
 
 local input_h5 = 
-  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5'
+  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.cutoff30_seq_len14.h5'
   --'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5'
   --'/storage/freebee/tshirts_shirts.image_sentence.txt.h5'
   --'/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt.h5'
 local input_json = 
-  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json'
+  '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.cutoff30_seq_len14.json'
   --'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json'
   --'/storage/freebee/tshirts_shirts.image_sentence.txt.json'
   --'/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt.json'
@@ -14,9 +14,8 @@ local total_samples_valid = 8000
 local dataset_name = 'tshirts_shirts_blous_knit'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_31.bn_removed.t7'
-  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.t7'
+  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
@@ -26,23 +25,32 @@ local rnn_size = 256
 local num_rnn_layers = 2
 local seq_length = -1
 local input_encoding_size = 2048
-local rnn_type = 'scrnn'
-local rnn_activation = 'relu'
+local rnn_type = 'lstm'
+local rnn_activation = 'tanh'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
-local finetune_cnn_after = -1
-local learning_rate = 4e-4
+local optimizer = 'adam'
+local learning_rate = 0.001--4e-4
+local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start = 50000
 local learning_rate_decay_every = 25000
-local cnn_learning_rate = 1e-5
-local cnn_weight_decay = 0.0000001
+local finetune_cnn_after = 0
+local cnn_optimizer = 'sgdm'
+local cnn_learning_rate = 0.001--4e-4
+local cnn_weight_decay = 0.0001
 
-local gpus
+local gpus = {1,2}
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
+  '_resception_epoch19_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_test', 
+  --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
+  batch_size, 
+  flip_jitter, crop_jitter, 
+  rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
+  learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
+  finetune_cnn_after, cnn_learning_rate
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
@@ -99,10 +107,12 @@ cmd:option('-seq_per_img', 1,
   'number of captions to sample for each image during training. Done for efficiency since CNN forward pass is expensive. E.g. coco has 5 sents/image')
 
 -- Optimization: for the Language Model
-cmd:option('-optim','adam',
+cmd:option('-optim', optimizer,
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 cmd:option('-learning_rate', learning_rate,
   'learning rate')
+cmd:option('-learning_rate_decay_seed', learning_rate_decay_seed,
+  'decay_factor = math.pow(opt.learning_rate_decay_seed, frac)')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
@@ -115,12 +125,12 @@ cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
 -- Optimization: for the CNN
-cmd:option('-cnn_optim','adam',
+cmd:option('-cnn_optim', cnn_optimizer,
   'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.8,
+cmd:option('-cnn_optim_alpha',0.9,
   'alpha for momentum of CNN')
 cmd:option('-cnn_optim_beta',0.999,
-  'alpha for momentum of CNN')
+  'beta for momentum of CNN')
 cmd:option('-cnn_learning_rate', cnn_learning_rate,
   'learning rate for the CNN')
 cmd:option('-cnn_weight_decay', cnn_weight_decay, 

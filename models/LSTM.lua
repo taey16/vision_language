@@ -38,9 +38,11 @@ function LSTM.lstm(input_size, output_size, rnn_size, num_layer, dropout, activa
     local reshaped = nn.Reshape(4, rnn_size)(all_input_sums)
     local n1, n2, n3, n4 = nn.SplitTable(2)(reshaped):split(4)
     -- decode the gates
-    --local in_gate    = nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n1))
-    --local forget_gate= nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n2))
-    --local out_gate   = nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n3))
+    --[[
+    local in_gate    = nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n1))
+    local forget_gate= nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n2))
+    local out_gate   = nn.Sigmoid()(cudnn.BatchNormalization(rnn_size,0.0001,nil,true)(n3))
+    --]]
     local in_gate    = nn.Sigmoid()(n1)
     local forget_gate= nn.Sigmoid()(n2)
     local out_gate   = nn.Sigmoid()(n3)
