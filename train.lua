@@ -64,61 +64,21 @@ else
   lmOpt.rnn_activation = opt.rnn_activation
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
-  -- initialize the ConvNet
-  protos.cnn = net_utils.build_cnn(
-    {encoding_size = opt.input_encoding_size, model_filename = opt.torch_model}
-  )
-  -- initialize a special FeatExpander module that "corrects" for the batch number discrepancy 
-  -- where we have multiple captions per one image in a batch. This is done for efficiency
-  -- because doing a CNN forward pass is expensive. We expand out the CNN features for each sentence
-  protos.expander = nn.FeatExpander(opt.seq_per_img)
-  -- criterion for the language model
   protos.crit = nn.LanguageModelCriterion()
 end
 
-cudnn.benchmark = true
-cudnn.fastest = true
-if #opt.gpus > 1 then
-  protos.cnn = parallel_utils.makeDataParallel(protos.cnn, opt.gpus)
-  print(protos.cnn)
-end
-
--- ship everything to GPU, maybe
 for k,v in pairs(protos) do v:cuda() end
 
--- flatten and prepare all model parameters to a single vector. 
--- Keep CNN params separate in case we want to try to get fancy with different optims on LM/CNN
 local params, grad_params = protos.lm:getParameters()
-local cnn_params, cnn_grad_params = protos.cnn:getParameters()
 print('total number of parameters in LM: ', params:nElement())
-print('total number of parameters in CNN: ', cnn_params:nElement())
 assert(params:nElement() == grad_params:nElement())
---assert(cnn_params:nElement() == cnn_grad_params:nElement())
 
--- construct thin module clones that share parameters with the actual
--- modules. These thin module will have no intermediates and will be used
--- for checkpointing to write significantly smaller checkpoint files
 local thin_lm = protos.lm:clone()
--- TODO: we are assuming that LM has specific members! figure out clean way to get rid of, not modular.
 thin_lm.core:share(protos.lm.core, 'weight', 'bias')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
---local thin_cnn = protos.cnn:clone('weight', 'bias')
-local thin_cnn
-cudnn.fastest = true
-cudnn.benchmark = true
-if #opt.gpus > 1 then
-  thin_cnn = protos.cnn:get(1):clone('weight', 'bias')
-else
-  thin_cnn = protos.cnn:clone('weight', 'bias')
-end
--- sanitize all modules of gradient storage so that we dont save big checkpoints
-net_utils.sanitize_gradients(thin_cnn)
 local lm_modules = thin_lm:getModulesList()
 for k,v in pairs(lm_modules) do net_utils.sanitize_gradients(v) end
 
--- create clones and ensure parameter sharing. we have to do this 
--- all the way here at the end because calls such as :cuda() and
--- :getParameters() reshuffle memory around.
 protos.lm:createClones()
 collectgarbage()
 
@@ -136,7 +96,6 @@ local function eval_split(split, evalopt)
   loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
-  local logprobs_sum = 0
   local perplexity = 0
   local accuracy = 0
   local loss_evals = 0
@@ -199,9 +158,6 @@ local function eval_split(split, evalopt)
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
     if n >= val_images_use then break end -- we've used enough images
   end
-
-  --perplexity = -cephes.log2(logprobs_sum)
-  --perplexity = cephes.pow(2.0, perplexity / loss_evals)
 
   local lang_stats
   if opt.language_eval == 1 then
