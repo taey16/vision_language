@@ -139,13 +139,13 @@ Careful: make sure model is in :evaluate() mode if you're calling this.
 Returns: a DxN LongTensor with integer elements 1..M, 
 where D is sequence length and N is batch (so columns are sequences)
 --]]
-function layer:sample(imgs, opt)
+function layer:sample(opt)
   local sample_max = utils.getopt(opt, 'sample_max', 1)
   local beam_size = utils.getopt(opt, 'beam_size', 1)
   local temperature = utils.getopt(opt, 'temperature', 1.0)
   -- indirection for beam search
   if sample_max == 1 and beam_size > 1 then 
-    return self:sample_beam(imgs, opt) 
+    return self:sample_beam(opt) 
   end
 
   local batch_size = imgs:size(1)
@@ -341,10 +341,7 @@ next token at every iteration of the LSTM (+2 because +1 for first dummy
 img forward, and another +1 because of START/END tokens shift)
 --]]
 function layer:updateOutput(input)
-  -- vision input
-  local imgs = input[1]
-  -- language input
-  local seq = input[2]
+  local seq = input
   assert(seq:size(1) == self.seq_length)
   -- lazily create clones on first forward pass
   if self.clones == nil then self:createClones() end
@@ -359,21 +356,18 @@ function layer:updateOutput(input)
   self.lookup_tables_inputs = {}
   -- we will keep track of max sequence length encountered in the data for efficiency
   self.tmax = 0
-  for t=1,self.seq_length+2 do
+  for t=1,self.seq_length+1 do
 
     local can_skip = false
     local xt
     if t == 1 then
-      -- feed in the images
-      xt = imgs -- NxK sized input
-    elseif t == 2 then
       -- feed in the start tokens (i.e. <BOS>)
       local it = torch.LongTensor(batch_size):fill(self.vocab_size+1)
       self.lookup_tables_inputs[t] = it
       xt = self.lookup_tables[t]:forward(it) -- NxK sized input (token embedding vectors)
     else
       -- feed in the rest of the sequence...
-      local it = seq[t-2]:clone()
+      local it = seq[t-1]:clone()
       if torch.sum(it) == 0 then
         -- computational shortcut for efficiency. All sequences have already terminated and only
         -- contain null tokens from here on. We can skip the rest of the forward pass and save time
@@ -415,8 +409,6 @@ end
 gradOutput is an (D+2)xNx(M+1) Tensor.
 --]]
 function layer:updateGradInput(input, gradOutput)
-  local dimgs -- grad on input images
-
   -- go backwards and lets compute gradients
   local dstate = {[self.tmax] = self.init_state} -- this works when init_state is all zeros
   for t=self.tmax,1,-1 do
@@ -430,17 +422,12 @@ function layer:updateGradInput(input, gradOutput)
     dstate[t-1] = {} -- copy over rest to state grad
     for k=2,self.num_state+1 do table.insert(dstate[t-1], dinputs[k]) end
     
-    -- continue backprop of xt
-    if t == 1 then
-      dimgs = dxt
-    else
-      local it = self.lookup_tables_inputs[t]
-      self.lookup_tables[t]:backward(it, dxt) -- backprop into lookup table
-    end
+    local it = self.lookup_tables_inputs[t]
+    self.lookup_tables[t]:backward(it, dxt) -- backprop into lookup table
   end
 
   -- we have gradient on image, but for LongTensor gt sequence we only create an empty tensor - can't backprop
-  self.gradInput = {dimgs, torch.Tensor()}
+  self.gradInput = dxt
   return self.gradInput
 end
 
@@ -474,7 +461,6 @@ function crit:updateOutput(input, seq)
   for b=1,N do -- iterate over batches
     local first_time = true
     for t=2,L do -- iterate over sequence time (ignore t=1, dummy forward for the image)
-
       -- fetch the index of the next token in the sequence
       local target_index
       if t-1 > D then -- we are out of bounds of the index sequence: pad with null tokens
@@ -550,7 +536,6 @@ function crit:accuracy(input, seq)
   end
   -- nomalize by number of predictions that were made
   accuracy = hit_count:div(n)
-  --perplexity = cephes.pow(2.0, perplexity / n )
   perplexity = math.pow(2.0, perplexity / n )
   return accuracy, perplexity
 end

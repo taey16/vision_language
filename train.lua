@@ -11,9 +11,7 @@ local parallel_utils = require 'misc.parallel_utils'
 require 'misc.DataLoader'
 require 'misc.optim_updates'
 require 'models.LanguageModel'
-require 'models.FeatExpander'
 require 'optim'
---require 'cephes' -- for cephes.log2
 
 
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
@@ -90,7 +88,6 @@ local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local val_images_use = utils.getopt(evalopt, 'val_images_use', true)
 
-  protos.cnn:evaluate()
   protos.lm:evaluate()
   -- rewind iteator back to first datapoint in the split
   loader:resetIterator(split)
@@ -112,22 +109,14 @@ local function eval_split(split, evalopt)
     }
 
     data.labels = data.labels[{{1,opt.seq_length},{}}]
-
-    -- preprocess in place, and don't augment
-    data.images = net_utils.preprocess(
-      data.images, opt.crop_size, false, false
-    )
     n = n + data.images:size(1)
 
     -- forward the model to get loss
-    local feats = protos.cnn:forward(data.images)
-    local expanded_feats = protos.expander:forward(feats)
-    local logprobs = protos.lm:forward{expanded_feats, data.labels}
+    local logprobs = protos.lm:forward(data.labels)
     local loss = protos.crit:forward(logprobs, data.labels)
     local acc, pplx = 0, 0
     acc, pplx = protos.crit:accuracy(logprobs, data.labels)
     loss_sum = loss_sum + loss
-    --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
     accuracy = accuracy + acc[2]
     perplexity = perplexity + pplx
@@ -170,13 +159,9 @@ end
 -------------------------------------------------------------------------------
 -- Loss function
 -------------------------------------------------------------------------------
-local function lossFun(finetune_cnn)
-  protos.cnn:training()
+local function lossFun()
   protos.lm:training()
   grad_params:zero()
-  if finetune_cnn then
-    cnn_grad_params:zero()
-  end
 
   -----------------------------------------------------------------------------
   -- Forward pass
@@ -191,51 +176,23 @@ local function lossFun(finetune_cnn)
 
   data.labels = data.labels[{{1,opt.seq_length},{}}]
 
-  -- preproces in-place, data augment in training
-  data.images = net_utils.preprocess(
-    data.images, opt.crop_size, opt.crop_jitter, opt.flip_jitter
-  )
-
-  -- data.images: Nx3xopt.image_sizexopt.image_size
   -- data.seq: LxM where L is sequence length upper bound, and M = N*seq_per_img
-
-  -- forward the ConvNet on images (most work happens here)
-  local feats = protos.cnn:forward(data.images)
-  -- we have to expand out image features, once for each sentence
-  local expanded_feats = protos.expander:forward(feats)
-  -- forward the language model
-  local logprobs = protos.lm:forward{expanded_feats, data.labels}
-  -- forward the language model criterion
+  local logprobs = protos.lm:forward(data.labels)
   local loss = protos.crit:forward(logprobs, data.labels)
-  -- compute perplexity
-  --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
   local perplexity, accuracy = 0, 0
   accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
   
+
   -----------------------------------------------------------------------------
   -- Backward pass
   -----------------------------------------------------------------------------
   -- backprop criterion
   local dlogprobs = protos.crit:backward(logprobs, data.labels)
-  -- backprop language model
-  local dexpanded_feats, ddummy = 
-    unpack(protos.lm:backward({expanded_feats, data.labels}, dlogprobs))
-  -- backprop the CNN, but only if we are finetuning
-  if finetune_cnn then
-    local dfeats = protos.expander:backward(feats, dexpanded_feats)
-    local dx = protos.cnn:backward(data.images, dfeats)
-  end
+  protos.lm:backward(data.labels, dlogprobs)
 
   -- clip gradients
   -- print(string.format('claming %f%% of gradients', 100*torch.mean(torch.gt(torch.abs(grad_params), opt.grad_clip))))
   grad_params:clamp(-opt.grad_clip, opt.grad_clip)
-
-  -- apply L2 regularization
-  if finetune_cnn and opt.cnn_weight_decay > 0 then
-    cnn_grad_params:add(opt.cnn_weight_decay, cnn_params)
-    -- note: we don't bother adding the l2 loss to the total loss, meh.
-    cnn_grad_params:clamp(-opt.grad_clip, opt.grad_clip)
-  end
   -----------------------------------------------------------------------------
 
   -- and lets get out!
@@ -263,13 +220,8 @@ local tm = torch.Timer()
 while true do  
   local start_trn = tm:time().real
 
-  local finetune_cnn = false
-  if opt.finetune_cnn_after >= 0 and iter >= opt.finetune_cnn_after then
-    finetune_cnn = true
-  end
-
   -- eval loss/gradient
-  local losses = lossFun(finetune_cnn)
+  local losses = lossFun()
 
   -- decay the learning rate for both LM and CNN
   local learning_rate = opt.learning_rate
@@ -298,28 +250,14 @@ while true do
     error('bad option opt.optim')
   end
 
-  -- do a cnn update (if finetuning, and if rnn above us is not warming up right now)
-  if finetune_cnn then
-    if opt.cnn_optim == 'sgd' then
-      sgd(cnn_params, cnn_grad_params, cnn_learning_rate)
-    elseif opt.cnn_optim == 'sgdm' then
-      sgdm(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
-    elseif opt.cnn_optim == 'adam' then
-      adam(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, opt.cnn_optim_beta, opt.optim_epsilon, cnn_optim_state)
-    else
-      error('bad option for opt.cnn_optim')
-    end
-  end
-
   local elapsed_trn = tm:time().real - start_trn
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
     io.flush(print(string.format(
-      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
+      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, optim: %s, %.3f', 
       iter, number_of_batches, epoch,
       losses.total_loss, losses.accuracy[2], losses.total_perplexity,
-      learning_rate, cnn_learning_rate, 
-      tostring(finetune_cnn), opt.optim, elapsed_trn
+      learning_rate, opt.optim, elapsed_trn
     )))
   end
 
@@ -372,7 +310,6 @@ while true do
         -- include the protos (which have weights) and save to file
         local save_protos = {}
         save_protos.lm = thin_lm -- these are shared clones, and point to correct param storage
-        save_protos.cnn = thin_cnn
         checkpoint.protos = save_protos
         -- also include the vocabulary mapping so that we can use the checkpoint 
         -- alone to run on arbitrary images without the data loader

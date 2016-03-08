@@ -80,7 +80,7 @@ function DataLoader:getBatch(opt)
   local split = utils.getopt(opt, 'split') -- lets require that user passes this in, for safety
   local batch_size = utils.getopt(opt, 'batch_size', 5) -- how many images get returned at one time (to go through CNN)
   local seq_per_img = utils.getopt(opt, 'seq_per_img', 5) -- number of sequences to return per image
-  local image_size = utils.getopt(opt, 'image_size', 292)
+  local image_size = utils.getopt(opt, 'image_size', 342)
   assert(self.max_image_size == image_size)
   local split_ix = self.split_ix[split]
   assert(split_ix, 'split ' .. split .. ' not found.')

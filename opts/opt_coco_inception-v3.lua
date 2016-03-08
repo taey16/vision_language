@@ -5,15 +5,6 @@ local total_samples_train = 123287
 local total_samples_valid = 3200
 local dataset_name = 'coco'
 
-local torch_model= 
-  ''
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
-  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
-local image_size = 342
-local crop_size = 299
-local crop_jitter = true
-local flip_jitter = false
-
 local rnn_size = 384
 local num_rnn_layers = 3
 local seq_length = -1
@@ -23,25 +14,19 @@ local rnn_activation = 'tanh'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
-local finetune_cnn_after = 0 
 local learning_rate = 0.00001--4e-4
 local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start= 0--300000
 local learning_rate_decay_every= 10000--50000
-local cnn_learning_rate = 0.00001
-local cnn_weight_decay = 0.00001
 
 local gpus = {1,2}
 local start_from = 
-  '/storage/coco/checkpoints/coco_123287_3200_seq_length-1/_inception-v3-2015-12-05_bn_removed_epoch33_bs16_flipfalse_croptrue_lstm_tanh_hidden384_layer3_dropout0.5_lr4.000000e-04_anneal_300000/model_id_inception-v3-2015-12-05_bn_removed_epoch33_bs16_flipfalse_croptrue_lstm_tanh_hidden384_layer3_dropout0.5_lr4.000000e-04_anneal_300000.t7'
+  ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%f_start%d_every%d_finetune%d_cnnlr%e', 
+  'bs%d_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%f_start%d_every%d', 
     batch_size, 
-    flip_jitter, crop_jitter, 
     rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
-    learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every, 
-    finetune_cnn_after,
-    cnn_learning_rate
+    learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every
 )
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', 
@@ -50,7 +35,7 @@ local checkpoint_path = string.format(
 
 cmd = torch.CmdLine()
 cmd:text()
-cmd:text('Train an Image Captioning model')
+cmd:text('Train LM')
 cmd:text()
 cmd:text('Options')
 
@@ -59,16 +44,6 @@ cmd:option('-input_h5',input_h5,
   'path to the h5file containing the preprocessed dataset')
 cmd:option('-input_json',input_json,
   'path to the json file containing additional info and vocab')
-cmd:option('-torch_model', torch_model,
-  'torch model file path')
-cmd:option('-image_size', image_size, 
-  'size of input image')
-cmd:option('-crop_size', crop_size, 
-  'size of croped input image')
-cmd:option('-crop_jitter', crop_jitter,
-  'flag for flipping [true | false]')
-cmd:option('-flip_jitter', flip_jitter,
-  'flag for flipping [true | false]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 
@@ -95,8 +70,6 @@ cmd:option('-grad_clip',0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
 cmd:option('-drop_prob_lm', drop_prob_lm, 
   'strength of dropout in the Language Model RNN')
-cmd:option('-finetune_cnn_after', finetune_cnn_after, 
-  'After what iteration do we start finetuning the CNN? (-1 = disable; never finetune, 0 = finetune from start)')
 cmd:option('-seq_per_img',5,
   'number of captions to sample for each image during training. Done for efficiency since CNN forward pass is expensive. E.g. coco has 5 sents/image')
 
@@ -118,17 +91,6 @@ cmd:option('-optim_beta',0.999,
 cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
--- Optimization: for the CNN
-cmd:option('-cnn_optim','sgdm',
-  'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.9,
-  'alpha for momentum of CNN')
-cmd:option('-cnn_optim_beta',0.999,
-  'alpha for momentum of CNN')
-cmd:option('-cnn_learning_rate', cnn_learning_rate,
-  'learning rate for the CNN')
-cmd:option('-cnn_weight_decay', cnn_weight_decay, 
-  'L2 weight decay just for the CNN')
 
 -- Evaluation/Checkpointing
 cmd:option('-train_samples', total_samples_train - total_samples_valid, 
