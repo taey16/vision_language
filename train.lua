@@ -13,7 +13,6 @@ require 'misc.optim_updates'
 require 'models.LanguageModel'
 require 'models.FeatExpander'
 require 'optim'
---require 'cephes' -- for cephes.log2
 
 
 local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
@@ -136,7 +135,6 @@ local function eval_split(split, evalopt)
   loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
-  local logprobs_sum = 0
   local perplexity = 0
   local accuracy = 0
   local loss_evals = 0
@@ -168,7 +166,6 @@ local function eval_split(split, evalopt)
     local acc, pplx = 0, 0
     acc, pplx = protos.crit:accuracy(logprobs, data.labels)
     loss_sum = loss_sum + loss
-    --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
     accuracy = accuracy + acc[2]
     perplexity = perplexity + pplx
@@ -199,9 +196,6 @@ local function eval_split(split, evalopt)
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
     if n >= val_images_use then break end -- we've used enough images
   end
-
-  --perplexity = -cephes.log2(logprobs_sum)
-  --perplexity = cephes.pow(2.0, perplexity / loss_evals)
 
   local lang_stats
   if opt.language_eval == 1 then
@@ -251,8 +245,6 @@ local function lossFun(finetune_cnn)
   local logprobs = protos.lm:forward{expanded_feats, data.labels}
   -- forward the language model criterion
   local loss = protos.crit:forward(logprobs, data.labels)
-  -- compute perplexity
-  --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
   local perplexity, accuracy = 0, 0
   accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
   
