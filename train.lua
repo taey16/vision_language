@@ -336,7 +336,7 @@ while true do
 
   -- do a cnn update (if finetuning, and if rnn above us is not warming up right now)
   if finetune_cnn then
-    if opt.optim == 'nag' then
+    if opt.cnn_optim == 'nag' then
       nag(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
     elseif opt.cnn_optim == 'sgdm' then
       sgdm(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
