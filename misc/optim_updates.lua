@@ -18,7 +18,7 @@ function sgdm(x, dx, lr, alpha, state)
 end
 
 
-function sgdmom(x, dx, lr, alpha, state)
+function nag(x, dx, lr, alpha, state)
   -- sgd momentum, uses nesterov update 
   -- (reference: http://cs231n.github.io/neural-networks-3/#sgd)
   if not state.m then

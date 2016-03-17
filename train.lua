@@ -13,7 +13,6 @@ require 'misc.optim_updates'
 require 'models.LanguageModel'
 require 'models.FeatExpander'
 require 'optim'
---require 'cephes' -- for cephes.log2
 
 
 local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
@@ -136,7 +135,6 @@ local function eval_split(split, evalopt)
   loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
-  local logprobs_sum = 0
   local perplexity = 0
   local accuracy = 0
   local loss_evals = 0
@@ -168,7 +166,6 @@ local function eval_split(split, evalopt)
     local acc, pplx = 0, 0
     acc, pplx = protos.crit:accuracy(logprobs, data.labels)
     loss_sum = loss_sum + loss
-    --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
     accuracy = accuracy + acc[2]
     perplexity = perplexity + pplx
@@ -199,9 +196,6 @@ local function eval_split(split, evalopt)
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
     if n >= val_images_use then break end -- we've used enough images
   end
-
-  --perplexity = -cephes.log2(logprobs_sum)
-  --perplexity = cephes.pow(2.0, perplexity / loss_evals)
 
   local lang_stats
   if opt.language_eval == 1 then
@@ -251,8 +245,6 @@ local function lossFun(finetune_cnn)
   local logprobs = protos.lm:forward{expanded_feats, data.labels}
   -- forward the language model criterion
   local loss = protos.crit:forward(logprobs, data.labels)
-  -- compute perplexity
-  --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
   local perplexity, accuracy = 0, 0
   accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
   
@@ -326,28 +318,30 @@ while true do
   end
 
   -- perform a parameter update
-  if opt.optim == 'rmsprop' then
+  if opt.optim == 'adam' then
+    adam(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_beta, opt.optim_epsilon, optim_state)
+  elseif opt.optim == 'rmsprop' then
     rmsprop(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_epsilon, optim_state)
   elseif opt.optim == 'adagrad' then
     adagrad(params, grad_params, learning_rate, opt.optim_epsilon, optim_state)
-  elseif opt.optim == 'sgd' then
-    sgd(params, grad_params, opt.learning_rate)
+  elseif opt.optim == 'nag' then
+    nag(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
   elseif opt.optim == 'sgdm' then
     sgdm(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
-  elseif opt.optim == 'sgdmom' then
-    sgdmom(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
-  elseif opt.optim == 'adam' then
-    adam(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_beta, opt.optim_epsilon, optim_state)
+  elseif opt.optim == 'sgd' then
+    sgd(params, grad_params, opt.learning_rate)
   else
     error('bad option opt.optim')
   end
 
   -- do a cnn update (if finetuning, and if rnn above us is not warming up right now)
   if finetune_cnn then
-    if opt.cnn_optim == 'sgd' then
-      sgd(cnn_params, cnn_grad_params, cnn_learning_rate)
+    if opt.cnn_optim == 'nag' then
+      nag(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
     elseif opt.cnn_optim == 'sgdm' then
       sgdm(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
+    elseif opt.cnn_optim == 'sgd' then
+      sgd(cnn_params, cnn_grad_params, cnn_learning_rate)
     elseif opt.cnn_optim == 'adam' then
       adam(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, opt.cnn_optim_beta, opt.optim_epsilon, cnn_optim_state)
     else
@@ -359,11 +353,11 @@ while true do
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
     io.flush(print(string.format(
-      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
+      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, cnn_wc: %.8f, optim: %s, cnn_optim: %s, finetune: %s, %.3f', 
       iter, number_of_batches, epoch,
       losses.total_loss, losses.accuracy[2], losses.total_perplexity,
-      learning_rate, cnn_learning_rate, 
-      tostring(finetune_cnn), opt.optim, elapsed_trn
+      learning_rate, cnn_learning_rate, opt.cnn_weight_decay,
+      opt.optim, opt.cnn_optim, tostring(finetune_cnn), elapsed_trn
     )))
   end
 
