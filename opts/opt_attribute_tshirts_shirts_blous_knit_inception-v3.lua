@@ -14,9 +14,8 @@ local total_samples_valid = 8000
 local dataset_name = 'tshirts_shirts_blous_knit'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_31.bn_removed.t7'
-  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception-v3-2015-12-05/digits_gpu2_inception-v3-2015-12-05_Sat_Jan_30_17_16_06_2016/model_16.bn_removed.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
+  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
@@ -26,23 +25,30 @@ local rnn_size = 256
 local num_rnn_layers = 2
 local seq_length = -1
 local input_encoding_size = 2048
-local rnn_type = 'scrnn'
-local rnn_activation = 'relu'
+local rnn_type = 'lstm'
+local rnn_activation = 'tanh'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
 local finetune_cnn_after = -1
-local learning_rate = 4e-4
-local learning_rate_decay_start = 50000
-local learning_rate_decay_every = 25000
-local cnn_learning_rate = 1e-5
-local cnn_weight_decay = 0.0000001
+local learning_rate = 0.001--4e-4
+local learning_rate_decay_seed = 0.94--0.5
+local learning_rate_decay_start = 0--50000
+local learning_rate_decay_every = 6475--25000
+local cnn_learning_rate = 4e-4
+local cnn_weight_decay = 0.00001
 
-local gpus
+local gpus = {1,2}
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_%d', batch_size, flip_jitter, crop_jitter, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, learning_rate, learning_rate_decay_start
+  '_resception_bn_removed_epoch19_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
+  batch_size, 
+  flip_jitter, crop_jitter, 
+  rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
+  learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
+  finetune_cnn_after, cnn_learning_rate, cnn_weight_decay
 )
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
@@ -103,6 +109,8 @@ cmd:option('-optim','adam',
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 cmd:option('-learning_rate', learning_rate,
   'learning rate')
+cmd:option('-learning_rate_decay_seed', learning_rate_decay_seed,
+  'decay_factor = math.pow(opt.learning_rate_decay_seed, frac)')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
@@ -115,12 +123,12 @@ cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
 -- Optimization: for the CNN
-cmd:option('-cnn_optim','adam',
+cmd:option('-cnn_optim','sgdm',
   'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.8,
+cmd:option('-cnn_optim_alpha',0.9,
   'alpha for momentum of CNN')
 cmd:option('-cnn_optim_beta',0.999,
-  'alpha for momentum of CNN')
+  'beta for momentum of CNN')
 cmd:option('-cnn_learning_rate', cnn_learning_rate,
   'learning rate for the CNN')
 cmd:option('-cnn_weight_decay', cnn_weight_decay, 
