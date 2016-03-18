@@ -262,7 +262,7 @@ def main(params):
   
   output_json = params['output_json']
   json.dump(out, open(output_json, 'w'))
-  print 'wrote ', 'output_json'
+  print 'wrote ', output_json
   print 'end of building image-atrribute sentence'
   sys.stdout.flush()
 
