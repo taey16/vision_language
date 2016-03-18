@@ -36,11 +36,11 @@ local gpus = {1}
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f', 
+  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
   batch_size, flip_jitter, crop_jitter, 
   rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
   learning_rate, learning_rate_decay_start, learning_rate_decay_seed, learning_rate_decay_every, 
-  funetune_cnn_after, cnn_learning_rate
+  funetune_cnn_after, cnn_learning_rate, cnn_weight_decay
 )
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length

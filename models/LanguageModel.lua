@@ -5,6 +5,7 @@ local LSTM = require 'models.LSTM'
 local GRU = require 'models.GRU'
 local SCRNN = require 'models.SCRNN'
 local RNN = require 'models.RNN'
+local init_utils = require 'misc.init_model_weight'
 --require 'cephes' -- for cephes.log2
 
 -------------------------------------------------------------------------------
@@ -42,6 +43,7 @@ function layer:__init(opt)
     io.flush(error(string.format(
       'Correct rnn_type: %s', self.rnn_type)))
   end
+  init_utils.MSRinit(self.core)
   self.lookup_table = nn.LookupTable(self.vocab_size + 1, self.input_encoding_size)
   self:_createInitState(1) -- will be lazily resized later during forward passes
 end
