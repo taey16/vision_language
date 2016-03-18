@@ -181,7 +181,8 @@ def encode_captions(imgs, wtoi, _max_length):
 def main(params):
 
   filename = params['input_filename']
-  image_caption = [entry.strip().split(';;') for entry in open(filename, 'r')]
+  #image_caption = [entry.strip().split(';;') for entry in open(filename, 'r')]
+  image_caption = [entry.strip().split(',') for entry in open(filename, 'r')]
   # make reproducible
   seed(123)
   # shuffle the order
@@ -206,8 +207,7 @@ def main(params):
   wtoi = {w:i+1 for i,w in enumerate(vocab)}
 
   # assign the splits
-  num_test = 0
-  assign_splits(imgs, params['num_val'], num_test)
+  assign_splits(imgs, params['num_val'], params['num_test'])
   
   # encode captions in large arrays, ready to ship to hdf5 file
   L, label_start_ix, label_end_ix, label_length = \
@@ -271,31 +271,38 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--input_filename', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt',
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt',
     #'/storage/freebee/tshirts_shirts.image_sentence.txt',
     #'/storage/freebee/csv_backup/tshirts_excel_1453264869210.csv.image_sentence.txt',
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_val', default= \
-    8000,
+    6400,
     #6000,
     #5000,
     #4000,
     type=int, 
     help='number of images to assign to validation data (for CV etc)')
+  parser.add_argument('--num_test', default= \
+    6400,
+    #6000,
+    #5000,
+    #4000,
+    type=int, 
+    help='number of images to assign to tesst data (for CV etc)')
   parser.add_argument('--output_json', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.json', 
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt.cutoff100.json', 
     #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.json',
     #'/storage/freebee/tshirts.image_sentence.txt.json',
     help='output json file')
   parser.add_argument('--output_h5', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.h5', 
+    '/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt.cutoff100.h5', 
     #'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.h5', 
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.h5',
     #'/storage/freebee/tshirts.image_sentence.txt.h5',
     help='output h5 file')
-  parser.add_argument('--word_count_threshold', default=1, type=int, 
+  parser.add_argument('--word_count_threshold', default=100, type=int, 
     help='only words that occur more than this number of times will be put in vocab')
   parser.add_argument('--image_dim', default=342, type=int, help='size of image')
 
