@@ -11,13 +11,13 @@ local input_json =
   --'/storage/freebee/tshirts_shirts_blous.image_sentence.txt.json'
   --'/storage/freebee/tshirts_shirts.image_sentence.txt.json'
   --'/storage/freebee/tshirts_excel_1453264869210.csv.image_sentence.txt.json'
-local total_samples_train = 97683
+local total_samples_train = 84883
 local total_samples_valid = 6400
 local dataset_name = 'tshirts_shirts_blous_knit'
 
 local torch_model= 
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
   '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
   --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.t7'
   --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
@@ -36,13 +36,13 @@ local drop_prob_lm = 0.5
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 0.001--4e-4
-local learning_rate_decay_seed = 0.94--0.5
-local learning_rate_decay_start = 6105 * 10--50000
-local learning_rate_decay_every = 6105--6475--25000
-local finetune_cnn_after = -1--6105*0--0 -- -1
+local learning_rate = 0.001
+local learning_rate_decay_seed = 0.94
+local learning_rate_decay_start = 5305 * 10
+local learning_rate_decay_every = 5305
+local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 0.001--4e-4
+local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
 local gpus = {1,2}
