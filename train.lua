@@ -348,7 +348,9 @@ while true do
     elseif opt.cnn_optim == 'sgd' then
       sgd(cnn_params, cnn_grad_params, cnn_learning_rate)
     elseif opt.cnn_optim == 'adam' then
-      adam(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, opt.cnn_optim_beta, opt.optim_epsilon, cnn_optim_state)
+      adam(
+        cnn_params, cnn_grad_params, 
+        cnn_learning_rate, opt.cnn_optim_alpha, opt.cnn_optim_beta, opt.optim_epsilon, cnn_optim_state)
     else
       error('bad option for opt.cnn_optim')
     end
