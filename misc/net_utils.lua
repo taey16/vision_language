@@ -32,7 +32,7 @@ function net_utils.build_cnn(opt)
   print(string.format('===> Loading pre-trained model complete', model_filename))
   return cnn_part 
   --]]
-  print(string.format('===> Loading pre-trained model complete', model_filename))
+  print(string.format('===> Loading pre-trained model complete: %s', model_filename))
   print(vision_encoder)
   return vision_encoder
 end

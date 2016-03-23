@@ -82,7 +82,6 @@ if #opt.gpus > 1 then
   protos.cnn = parallel_utils.makeDataParallel(protos.cnn, opt.gpus)
   print(protos.cnn)
 end
-
 -- ship everything to GPU, maybe
 for k,v in pairs(protos) do v:cuda() end
 
@@ -104,8 +103,6 @@ thin_lm.core:share(protos.lm.core, 'weight', 'bias')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 --local thin_cnn = protos.cnn:clone('weight', 'bias')
 local thin_cnn
-cudnn.fastest = true
-cudnn.benchmark = true
 if #opt.gpus > 1 then
   thin_cnn = protos.cnn:get(1):clone('weight', 'bias')
 else
