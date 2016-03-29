@@ -8,8 +8,8 @@ local total_samples_valid = 8000
 local dataset_name = 'tshirts_shirts_blous_knit_jacket_onepiece'
 
 local torch_model= 
-  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
@@ -27,15 +27,15 @@ local drop_prob_lm = 0.5
 local batch_size = 16
 local optimizer = 'adam'
 local learning_rate = 0.001
-local learning_rate_decay_seed = 0.94
+local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start = 5783 * 10
 local learning_rate_decay_every = 5783
-local finetune_cnn_after = 0
+local finetune_cnn_after = -1
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
-local gpus = {1,2}
+local gpus = {1}
 local start_from = 
   ''
 local experiment_id = string.format(

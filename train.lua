@@ -16,7 +16,8 @@ require 'optim'
 --require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
+local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_jacket_onepiece.lua')
+--local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_inception-v3.lua')
