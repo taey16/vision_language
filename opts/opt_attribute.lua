@@ -135,9 +135,9 @@ cmd:option('-cnn_weight_decay', cnn_weight_decay,
 -- Evaluation/Checkpointing
 cmd:option('-train_samples', total_samples_train - total_samples_valid - total_samples_test,
   '# of samples in training set')
-cmd:option('-val_images_use',-1,--total_samples_valid,
+cmd:option('-val_images_use', total_samples_valid,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-test_images_use',-1,--total_samples_test,
+cmd:option('-test_images_use', total_samples_test,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
 cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size /2.0), 
   'how often to save a model checkpoint?')
