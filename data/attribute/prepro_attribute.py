@@ -227,6 +227,8 @@ def main(params):
   for i,img in enumerate(imgs):
     if str(img['file_path']) == str('/data2/freebee/Images/1165854305.jpg'): continue
     if str(img['file_path']) == str('/data2/freebee/Images/608565234.jpg'): continue
+    if str(img['file_path']) == str('/data2/freebee/Images/1169756502.jpg'): continue
+    if str(img['file_path']) == str('/data2/freebee/Images/1095534631.jpg'): continue
     # load the image
     I = imread(img['file_path'])
     try:
