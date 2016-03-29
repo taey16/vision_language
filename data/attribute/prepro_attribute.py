@@ -282,7 +282,7 @@ if __name__ == "__main__":
     #'/storage/freebee/csv_backup/tshirts_excel_1453264869210.csv.image_sentence.txt',
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_val', default= \
-    50000,
+    40000,
     #8000,
     #6400,
     #6000,
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     type=int, 
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_test', default= \
-    50000,
+    40000,
     #8000,
     #6400,
     #6000,
