@@ -226,6 +226,7 @@ def main(params):
   dset = f.create_dataset("images", (N,3,image_dim, image_dim), dtype='uint8')
   for i,img in enumerate(imgs):
     if str(img['file_path']) == str('/data2/freebee/Images/1165854305.jpg'): continue
+    if str(img['file_path']) == str('/data2/freebee/Images/608565234.jpg'): continue
     # load the image
     I = imread(img['file_path'])
     try:
