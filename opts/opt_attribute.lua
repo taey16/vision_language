@@ -3,8 +3,9 @@ local input_h5 =
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5'
 local input_json = 
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
-local total_samples_train = 379105 --(459110 - 5 - 40000 - 40000)
+local total_samples_train = 459110 - 5
 local total_samples_valid = 40000
+local total_samples_test = 40000
 local dataset_name = 'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest'
 
 local torch_model= 
@@ -132,11 +133,13 @@ cmd:option('-cnn_weight_decay', cnn_weight_decay,
   'L2 weight decay just for the CNN')
 
 -- Evaluation/Checkpointing
-cmd:option('-train_samples', total_samples_train - total_samples_valid,
+cmd:option('-train_samples', total_samples_train - total_samples_valid - total_samples_test,
   '# of samples in training set')
-cmd:option('-val_images_use',total_samples_valid,
+cmd:option('-val_images_use',-1,--total_samples_valid,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid) / batch_size /2.0), 
+cmd:option('-test_images_use',-1,--total_samples_test,
+  'how many images to use when periodically evaluating the validation loss? (-1 = all)')
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size /2.0), 
   'how often to save a model checkpoint?')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
