@@ -99,10 +99,9 @@ cmd:option('-seq_per_img',5,
   'number of captions to sample for each image during training. Done for efficiency since CNN forward pass is expensive. E.g. coco has 5 sents/image')
 
 -- Optimization: for the Language Model
-cmd:option('-optim','adam',
+cmd:option('-optim', optimizer,
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
-cmd:option('-learning_rate', learning_rate,
-  'learning rate')
+cmd:option('-learning_rate', learning_rate, 'learning rate')
 cmd:option('-learning_rate_decay_seed', learning_rate_decay_seed,
   'decay_factor = math.pow(opt.learning_rate_decay_seed, frac)')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
@@ -111,8 +110,7 @@ cmd:option('-learning_rate_decay_every', learning_rate_decay_every,
   'every how many iterations thereafter to drop LR by half?')
 cmd:option('-optim_alpha',0.8,
   'alpha for adagrad/rmsprop/momentum/adam')
-cmd:option('-optim_beta',0.999,
-  'beta used for adam')
+cmd:option('-optim_beta',0.999, 'beta used for adam')
 cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
@@ -122,7 +120,7 @@ cmd:option('-cnn_optim', cnn_optimizer,
 cmd:option('-cnn_optim_alpha',0.9,
   'alpha for momentum of CNN')
 cmd:option('-cnn_optim_beta',0.999,
-  'alpha for momentum of CNN')
+  'beta for momentum of CNN')
 cmd:option('-cnn_learning_rate', cnn_learning_rate,
   'learning rate for the CNN')
 cmd:option('-cnn_weight_decay', cnn_weight_decay, 
