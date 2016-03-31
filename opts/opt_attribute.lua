@@ -9,44 +9,45 @@ local total_samples_test = 40000
 local dataset_name = 'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest'
 
 local torch_model= 
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
-  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
 local flip_jitter = false
 
-local rnn_size = 512
+local rnn_size = 1024
 local num_rnn_layers = 2
 local seq_length = 14
 local input_encoding_size = 2048
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.5
+local drop_prob_lm = 0.2
 
 local batch_size = 16
-local optimizer = 'rmsprop'
+local optimizer = 'adam'
 local learning_rate = 0.001
 local alpha = 0.9
-local learning_rate_decay_seed = 0.5
+local learning_rate_decay_seed = 0.9
 local learning_rate_decay_start = 23694 * 10
 local learning_rate_decay_every = 23694
-local finetune_cnn_after = -1
+local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
-local gpus = {1,2}
+local gpus = {1}
 local start_from = 
   ''
 local experiment_id = string.format(
-  'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  'resception_ep29_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
   flip_jitter, crop_jitter, 
   rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
-  learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
+  optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
   finetune_cnn_after, cnn_learning_rate, cnn_weight_decay
 )
 local checkpoint_path = string.format(
@@ -135,7 +136,7 @@ cmd:option('-val_images_use', total_samples_valid,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
 cmd:option('-test_images_use', total_samples_test,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size /2.0), 
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size), 
   'how often to save a model checkpoint?')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
