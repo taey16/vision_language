@@ -276,7 +276,8 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--input_filename', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt',
+    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_coat_skirt_cardigan_vest.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt',
@@ -286,6 +287,7 @@ if __name__ == "__main__":
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_val', default= \
     40000,
+    #40000,
     #8000,
     #6400,
     #6000,
@@ -295,6 +297,7 @@ if __name__ == "__main__":
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_test', default= \
     40000,
+    #40000,
     #8000,
     #6400,
     #6000,
@@ -303,7 +306,8 @@ if __name__ == "__main__":
     type=int, 
     help='number of images to assign to tesst data (for CV etc)')
   parser.add_argument('--output_json', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json',
+    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt.cutoff100.json',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_coat_skirt_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece.image_sentence.txt.shuffle.txt.cutoff100.json',
     #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt.cutoff100.json', 
@@ -312,7 +316,8 @@ if __name__ == "__main__":
     #'/storage/freebee/tshirts.image_sentence.txt.json',
     help='output json file')
   parser.add_argument('--output_h5', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5',
+    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt.cutoff100.h5',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_coat_skirt_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece.image_sentence.txt.shuffle.txt.cutoff100.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit.image_sentence.txt.shuffle.txt.cutoff100.h5', 
