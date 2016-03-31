@@ -46,6 +46,8 @@ end
 
 
 -- rmsprop implementation, simple as it should be
+-- MeanSquare(w, t) = 0.9 MeanSquare(w, t−1) + 0.1 (∂E/∂w (t))^2
+-- w(t+1) = w(t) + lr * ((∂E/∂w (t)) / (sqrt(MeanSquare(w, t)) + epsilon))
 function rmsprop(x, dx, lr, alpha, epsilon, state)
   if not state.m then
     state.m = x.new(#x):zero()
