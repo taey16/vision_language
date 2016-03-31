@@ -26,8 +26,9 @@ local rnn_activation = 'tanh'
 local drop_prob_lm = 0.5
 
 local batch_size = 16
-local optimizer = 'adam'
+local optimizer = 'rmsprop'
 local learning_rate = 0.001
+local alpha = 0.9
 local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start = 23694 * 10
 local learning_rate_decay_every = 23694
@@ -103,30 +104,25 @@ cmd:option('-seq_per_img', 1,
   'number of captions to sample for each image during training. Done for efficiency since CNN forward pass is expensive. E.g. coco has 5 sents/image')
 
 -- Optimization: for the Language Model
-cmd:option('-optim','adam',
+cmd:option('-optim', optimizer,
   'what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
-cmd:option('-learning_rate', learning_rate,
-  'learning rate')
+cmd:option('-learning_rate', learning_rate, 'learning rate')
 cmd:option('-learning_rate_decay_seed', learning_rate_decay_seed,
   'decay_factor = math.pow(opt.learning_rate_decay_seed, frac)')
 cmd:option('-learning_rate_decay_start', learning_rate_decay_start, 
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
   'every how many iterations thereafter to drop LR by half?')
-cmd:option('-optim_alpha',0.8,
-  'alpha for adagrad/rmsprop/momentum/adam (i.e. stepsize, learningrate')
-cmd:option('-optim_beta',0.999,
-  'beta used for adam')
+cmd:option('-optim_alpha', alpha,
+  'alpha for adagrad/rmsprop/momentum/adam')
+cmd:option('-optim_beta',0.999, 'beta used for adam')
 cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
 -- Optimization: for the CNN
-cmd:option('-cnn_optim', cnn_optimizer,
-  'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.9,
-  'alpha for momentum of CNN')
-cmd:option('-cnn_optim_beta',0.999,
-  'beta for momentum of CNN')
+cmd:option('-cnn_optim', cnn_optimizer, 'optimization to use for CNN')
+cmd:option('-cnn_optim_alpha',0.9, 'alpha for momentum of CNN')
+cmd:option('-cnn_optim_beta',0.999, 'beta for momentum of CNN')
 cmd:option('-cnn_learning_rate', cnn_learning_rate,
   'learning rate for the CNN')
 cmd:option('-cnn_weight_decay', cnn_weight_decay, 
