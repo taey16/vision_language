@@ -17,31 +17,32 @@ local crop_size = 299
 local crop_jitter = true
 local flip_jitter = false
 
-local rnn_size = 1024
+local rnn_size = 512
 local num_rnn_layers = 2
 local seq_length = 14
 local input_encoding_size = 2048
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.2
+local drop_prob_lm = 0.0
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 0.001
+local learning_rate = 0.004
 local alpha = 0.9
 local learning_rate_decay_seed = 0.9
 local learning_rate_decay_start = 23694 * 10
 local learning_rate_decay_every = 23694
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 0.001
+local cnn_learning_rate = 0.004
 local cnn_weight_decay = 0.00001
 
 local gpus = {1}
+local retrain_iter = 288970
 local start_from = 
-  ''
+  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
 local experiment_id = string.format(
-  'resception_ep29_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  'resception_ep29_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
@@ -53,6 +54,11 @@ local experiment_id = string.format(
 local checkpoint_path = string.format(
   '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
 )
+
+if start_from ~= '' and retrain_iter == 0 then
+  print(string.format('retrain from %s', start_from))
+  error(string.format('retrain_iter MUST NOT zero'))
+end
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -75,6 +81,8 @@ cmd:option('-flip_jitter', flip_jitter,
   'flag for flipping [false | true ]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
+cmd:option('-retrain_iter', retrain_iter, 
+  'initial iteration number which should be set non-zero in case of retraining')
 
 -- Model settings
 cmd:option('-rnn_size', rnn_size,

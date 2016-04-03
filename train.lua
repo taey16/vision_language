@@ -295,7 +295,7 @@ local logger_tst =
 -------------------------------------------------------------------------------
 -- Main loop
 -------------------------------------------------------------------------------
-local iter = 0
+local iter = opt.retrain_iter
 local loss0
 local number_of_batches = opt.train_samples / opt.batch_size
 local optim_state = {}
