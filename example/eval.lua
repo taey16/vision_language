@@ -15,7 +15,7 @@ local model_filename =
 local image_size = 342
 local crop_size = 299
 local seq_length = 14
-local batch_size = 32
+local batch_size = 1
 
 -------------------------------------------------------------------------------
 -- Input arguments and options
@@ -140,6 +140,11 @@ local function eval_split(split, evalopt)
     data.images = net_utils.preprocess(
       data.images, opt.crop_size, false, false
     )
+    --[[
+    data.images = net_utils.preprocess_for_predict_aug5(
+      data.images:squeeze(), opt.crop_size
+    )
+    --]]
     n = n + data.images:size(1)
 
     -- forward the model to get loss

@@ -38,6 +38,41 @@ function net_utils.build_cnn(opt)
 end
 
 
+function net_utils.preprocess_for_predict_aug5(imgs, crop_size)
+  -- used ofr 3d tensor input
+  assert(imgs:dim() == 3, 
+    'does not support 4D images in net_utils.preprocess_for_predict')
+  local h,w = imgs:size(2), imgs:size(3)
+  local cnn_input_size = crop_size
+
+  --[[
+  local oH = crop_size
+  local oW = crop_size
+  local iH = h
+  local iW = w
+  local w1 = math.ceil((iW-oW)/2)
+  local h1 = math.ceil((iH-oH)/2)
+  local output = torch.FloatTensor(5, 3, oW, oH)
+  output[{1 ,{},{},{}}] = image.crop(imgs 1,    1,    oW+1, oH+1)
+  output[{2 ,{},{},{}}] = image.crop(imgs, iW-oW,1,    iH,   oH+1)
+  output[{3 ,{},{},{}}] = image.crop(imgs, 1,    iH-oH,oW+1, iH)
+  output[{4 ,{},{},{}}] = image.crop(imgs, iW-oW,iH-oH,iW,   iH)
+  output[{5 ,{},{},{}}] = image.crop(imgs, w1,   h1,   w1+oW,h1+oH)
+  --]]
+  local output = image_utils.augment_image(imgs, {3, h, w}, {3, crop_size, crop_size})
+  output = torch.div(output:float(), 255.0)
+
+  for aug=1,5 do
+    for c=1,3 do
+      output[{{aug}, {c},{},{}}]:add(-net_utils.cnn_model_mean[c])
+      output[{{aug}, {c},{},{}}]:div(net_utils.cnn_model_std[c])
+    end
+  end
+  output = output:cuda()
+  return output
+end
+
+
 function net_utils.preprocess_for_predict(imgs, crop_size)
   -- used ofr 3d tensor input
   assert(imgs:dim() == 3, 
