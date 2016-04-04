@@ -146,6 +146,7 @@ local function eval_split(split, evalopt)
     local feats = protos.cnn:forward(data.images)
     if feats:dim() == 1 then
       local feats_2d = torch.CudaTensor(1,feats:size(1)) 
+      feats_2d[{1,{}}] = feats:clone()
       feats = feats_2d
     end
 
@@ -155,11 +156,20 @@ local function eval_split(split, evalopt)
     if data.labels then
       local expanded_feats = protos.expander:forward(feats)
       local logprobs = protos.lm:forward{expanded_feats, data.labels}
+      -- logprobs:size() --> (opt.seq_length+2, opt.batch_size, # of total words)
       loss = protos.crit:forward(logprobs, data.labels)
       loss_sum = loss_sum + loss
 
       acc, pplx = protos.crit:accuracy(logprobs, data.labels)
-      accuracy = accuracy + acc[1]
+      local avg_acc_per_seq = 0
+      --for i=1,opt.seq_length do 
+      for i=1,8 do 
+        avg_acc_per_seq = avg_acc_per_seq + acc[i] 
+      end
+      --avg_acc_per_seq = avg_acc_per_seq / opt.seq_length
+      avg_acc_per_seq = avg_acc_per_seq / 8
+      --accuracy = accuracy + acc[2]
+      accuracy = accuracy + avg_acc_per_seq
       perplexity = perplexity + pplx
 
       loss_evals = loss_evals + 1
