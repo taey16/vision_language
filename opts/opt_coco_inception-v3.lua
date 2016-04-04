@@ -33,6 +33,7 @@ local cnn_learning_rate = 1e-5
 local cnn_weight_decay = 0.0000001
 
 local gpus = {1}
+local retrain_iter = 0 
 local start_from = 
   ''
 local experiment_id = string.format(
@@ -45,6 +46,11 @@ local experiment_id = string.format(
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
 )
+
+if start_from ~= '' and retrain_iter == 0 then
+  print(string.format('retrain from %s', start_from))
+  error(string.format('retrain_iter MUST NOT zero'))
+end
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -69,6 +75,8 @@ cmd:option('-flip_jitter', flip_jitter,
   'flag for flipping [true | false]')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
+cmd:option('-retrain_iter', retrain_iter, 
+  'initial iteration number which should be set non-zero in case of retraining')
 
 -- Model settings
 cmd:option('-rnn_size', rnn_size,
