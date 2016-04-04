@@ -15,6 +15,7 @@ local model_filename =
 local image_size = 342
 local crop_size = 299
 local seq_length = 14
+local batch_size = 32
 
 -------------------------------------------------------------------------------
 -- Input arguments and options
@@ -31,7 +32,7 @@ cmd:option('-model', model_filename, 'path to model to evaluate')
 cmd:option('-image_size', image_size, 'size of input image')
 cmd:option('-crop_size', crop_size, 'size of input image')
 cmd:option('-seq_length', seq_length, 'max. length of a sentence')
-cmd:option('-batch_size', 16, 'if > 0 then overrule, otherwise load from checkpoint.')
+cmd:option('-batch_size', batch_size, 'if > 0 then overrule, otherwise load from checkpoint.')
 cmd:option('-num_images', 40000, 'how many images to use when periodically evaluating the loss? (-1 = all)')
 cmd:option('-language_eval', 0, 'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
 cmd:option('-dump_images', 0, 'Dump images into vis/imgs folder for vis? (1=yes,0=no)')
@@ -105,6 +106,8 @@ protos.expander = nn.FeatExpander(opt.seq_per_img)
 protos.crit = nn.LanguageModelCriterion()
 protos.lm:createClones() -- reconstruct clones inside the language model
 for k,v in pairs(protos) do v:cuda() end
+--protos.cnn:evaluate()
+protos.lm:evaluate()
 
 -------------------------------------------------------------------------------
 -- Evaluation fun(ction)
@@ -113,11 +116,13 @@ local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local num_images = utils.getopt(evalopt, 'num_images', true)
 
-  protos.cnn:evaluate()
-  protos.lm:evaluate()
+  --protos.cnn:evaluate()
+  --protos.lm:evaluate()
   loader:resetIterator(split) -- rewind iteator back to first datapoint in the split
   local n = 0
   local loss_sum = 0
+  local accuracy = 0
+  local perplexity = 0
   local loss_evals = 0
   local predictions = {}
   while true do
@@ -139,15 +144,24 @@ local function eval_split(split, evalopt)
 
     -- forward the model to get loss
     local feats = protos.cnn:forward(data.images)
+    if feats:dim() == 1 then
+      local feats_2d = torch.CudaTensor(1,feats:size(1)) 
+      feats = feats_2d
+    end
 
     -- evaluate loss if we have the labels
     local loss = 0
+    local acc,pplx = 0, 0
     if data.labels then
       local expanded_feats = protos.expander:forward(feats)
-      print(data.labels:size())
       local logprobs = protos.lm:forward{expanded_feats, data.labels}
       loss = protos.crit:forward(logprobs, data.labels)
       loss_sum = loss_sum + loss
+
+      acc, pplx = protos.crit:accuracy(logprobs, data.labels)
+      accuracy = accuracy + acc[1]
+      perplexity = perplexity + pplx
+
       loss_evals = loss_evals + 1
     end
 
@@ -157,7 +171,7 @@ local function eval_split(split, evalopt)
     local seq = protos.lm:sample(feats, sample_opts)
     local sents = net_utils.decode_sequence(vocab, seq)
     for k=1,#sents do
-      local entry = {image_id = data.infos[k].id, caption = sents[k]}
+      local entry = {image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
       if opt.dump_path == 1 then
         entry.file_name = data.infos[k].file_path
       end
@@ -169,7 +183,7 @@ local function eval_split(split, evalopt)
         os.execute(cmd) -- dont think there is cleaner way in Lua
       end
       if verbose then
-        print(string.format('image %s: %s', entry.image_id, entry.caption))
+        print(string.format('image %s: %s %s', entry.image_id, entry.file_path, entry.caption))
       end
     end
 
@@ -177,7 +191,9 @@ local function eval_split(split, evalopt)
     local ix0 = data.bounds.it_pos_now
     local ix1 = math.min(data.bounds.it_max, num_images)
     if verbose then
-      print(string.format('evaluating performance... %d/%d (%f)', ix0-1, ix1, loss))
+      print(string.format('evaluating performance... %d/%d (loss: %f, acc: %f, pplx: %f)', 
+        ix0-1, ix1, 
+        loss, acc[2], pplx))
     end
 
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
@@ -189,11 +205,13 @@ local function eval_split(split, evalopt)
     lang_stats = net_utils.language_eval(predictions, opt.id)
   end
 
-  return loss_sum/loss_evals, predictions, lang_stats
+  if n % opt.batch_size * 100 == 0 then collectgarbage() end
+
+  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
 end
 
-local loss, split_predictions, lang_stats = eval_split(opt.split, {num_images = opt.num_images})
-print('loss: ', loss)
+local loss, split_predictions, lang_stats, perplexity, accuracy = eval_split(opt.split, {num_images = opt.num_images})
+print(string.format('loss: %f, acc: %f, pplx: %f', loss, accuracy, perplexity))
 if lang_stats then
   print(lang_stats)
 end
