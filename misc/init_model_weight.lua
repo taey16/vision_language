@@ -43,7 +43,11 @@ function nn_init.MSRinit(net)
   local function Linearinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
       print('Linearinit')
-      v.bias:zero()
+      -- bias is removed iff
+      -- BN layer should be followed by the current linear layer
+      if v.bias then
+        v.bias:zero()
+      end
     end
     io.flush()
   end
