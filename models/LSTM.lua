@@ -144,6 +144,3 @@ end
 
 return LSTM
 
-
-return LSTM
-
