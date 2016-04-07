@@ -29,7 +29,7 @@ function layer:__init(opt)
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core rnn network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
-    if self.use_bn = 'bn' then
+    if self.use_bn == 'bn' then
       self.core = LSTM.bn_lstm(
         self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
     else
