@@ -1,12 +1,16 @@
 
 local input_h5 = 
-  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5'
+  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.h5'
+  --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5'
 local input_json = 
-  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
-local total_samples_train = 459110 - 5
-local total_samples_valid = 40000
-local total_samples_test = 40000
-local dataset_name = 'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest'
+  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.json'
+  --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
+local total_samples_train = 713235 - 5
+local total_samples_valid = 50000
+local total_samples_test = 50000
+local dataset_name = 
+  'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat'
+  --'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest'
 
 local torch_model= 
   '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
@@ -25,13 +29,13 @@ local use_bn = 'original'
 local init_gamma = 0.1
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.0
+local drop_prob_lm = 0.2
 
 local batch_size = 16
 local optimizer = 'adam'
 local learning_rate = 0.001
 local alpha = 0.9
-local learning_rate_decay_seed = 0.90
+local learning_rate_decay_seed = 0.94
 local learning_rate_decay_start = 23694 * 10
 local learning_rate_decay_every = 23694
 local finetune_cnn_after = 0
