@@ -21,6 +21,7 @@ function layer:__init(opt)
   self.input_encoding_size = utils.getopt(opt, 'input_encoding_size')
   self.rnn_size = utils.getopt(opt, 'rnn_size')
   self.num_layers = utils.getopt(opt, 'num_layers')
+  self.use_bn = utils.getopt(opt, 'use_bn')
   self.rnn_type = utils.getopt(opt, 'rnn_type')
   self.activation = utils.getopt(opt, 'rnn_activation')
   local dropout = utils.getopt(opt, 'dropout')
@@ -28,8 +29,13 @@ function layer:__init(opt)
   self.seq_length = utils.getopt(opt, 'seq_length')
   -- create the core rnn network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
-    self.core = LSTM.lstm(
-      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    if self.use_bn = 'bn' then
+      self.core = LSTM.bn_lstm(
+        self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    else
+      self.core = LSTM.lstm(
+        self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    end
   elseif self.rnn_type == 'gru' then
     self.core = GRU.gru(
       self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout)

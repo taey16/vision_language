@@ -21,33 +21,36 @@ local rnn_size = 512
 local num_rnn_layers = 2
 local seq_length = 14
 local input_encoding_size = 2048
+local use_bn = 'original'
+local init_gamma = 0.1
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
 local drop_prob_lm = 0.0
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 0.004
+local learning_rate = 0.001
 local alpha = 0.9
-local learning_rate_decay_seed = 0.9
+local learning_rate_decay_seed = 0.90
 local learning_rate_decay_start = 23694 * 10
 local learning_rate_decay_every = 23694
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 0.004
+local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
 local gpus = {1}
-local retrain_iter = 288970
+local retrain_iter = 0--288970
 local start_from = 
-  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
+  ''
+  --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.0_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
 local experiment_id = string.format(
-  'resception_ep29_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
   flip_jitter, crop_jitter, 
-  rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
+  use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
   optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
   finetune_cnn_after, cnn_learning_rate, cnn_weight_decay
 )
@@ -95,6 +98,10 @@ cmd:option('-seq_length', seq_length,
   'number of seq. length (without EOS/SOS token)')
 cmd:option('-rnn_type', rnn_type,
   'rnn type [rnn | lstm | gru]')
+cmd:option('-use_bn', use_bn,
+  'use bn or not [bn | original]')
+cmd:option('-init_gamma', init_gamma,
+  'initial gamma for BN')
 cmd:option('-rnn_activation', rnn_activation,
   'activation for LSTM/RNN [tanh | relu | none]')
 

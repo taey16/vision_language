@@ -34,20 +34,25 @@ function nn_init.MSRinit(net)
   end
   local function BNinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
-      print('BNinit')
-      v.weight:fill(1)
+      print(string.format('BNinit: weight %f', opt.init_gamma))
+      v.weight:fill(opt.init_gamma)
       v.bias:zero()
     end
     io.flush()
   end
   local function Linearinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
-      print('Linearinit')
-      -- bias is removed iff
-      -- BN layer should be followed by the current linear layer
+      print('Linearinit: bias 0.0')
       if v.bias then
         v.bias:zero()
       end
+    end
+    io.flush()
+  end
+  local function Addinit(module_type)
+    for k,v in pairs(net:findModules(module_type)) do
+      print('Addinit: bias 0.0')
+      v.bias:zero()
     end
     io.flush()
   end
@@ -59,6 +64,7 @@ function nn_init.MSRinit(net)
   BNinit'nn.SpatialBatchNormalization'
   BNinit'nn.BatchNormalization'
   Linearinit'nn.Linear'
+  Addinit'nn.Add'
 end
 
 return nn_init

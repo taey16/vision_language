@@ -48,6 +48,7 @@ else
   local lmOpt = {}
   lmOpt.vocab_size = loader:getVocabSize()
   lmOpt.input_encoding_size = opt.input_encoding_size
+  lmOpt.use_bn = opt.use_bn
   lmOpt.rnn_size = opt.rnn_size
   lmOpt.num_layers = opt.num_rnn_layers
   lmOpt.dropout = opt.drop_prob_lm
