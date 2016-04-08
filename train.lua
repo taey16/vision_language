@@ -176,7 +176,7 @@ local function eval_split(split, evalopt)
     -- forward the model to also get generated samples for each image
     local seq = protos.lm:sample(feats)
     local sents = net_utils.decode_sequence(vocab, seq)
-    for k=1,#sents do
+    for k=1,#sents/16 do
       local entry = {image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
       table.insert(predictions, entry)
       if verbose then
