@@ -5,7 +5,7 @@ local input_h5 =
 local input_json = 
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.json'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
-local total_samples_train = 613235
+local total_samples_train = 613235 + 50000 + 50000
 local total_samples_valid = 50000
 local total_samples_test = 50000
 local dataset_name = 
