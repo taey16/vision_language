@@ -5,7 +5,7 @@ local input_h5 =
 local input_json = 
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.json'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
-local total_samples_train = 713235 - 5
+local total_samples_train = 613235
 local total_samples_valid = 50000
 local total_samples_test = 50000
 local dataset_name = 
@@ -36,8 +36,8 @@ local optimizer = 'adam'
 local learning_rate = 0.001
 local alpha = 0.9
 local learning_rate_decay_seed = 0.94
-local learning_rate_decay_start = 23694 * 10
-local learning_rate_decay_every = 23694
+local learning_rate_decay_start = 38327 * 10--23694 * 10
+local learning_rate_decay_every = 38327--23694
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
