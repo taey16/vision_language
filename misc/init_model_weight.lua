@@ -42,7 +42,8 @@ function nn_init.MSRinit(net)
   end
   local function Linearinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
-      print('Linearinit: bias 0.0')
+      print(string.format(
+        'Linearinit: bias 0.0 (is it nil? %s)', tostring(v.bias == nil)))
       if v.bias then
         v.bias:zero()
       end
