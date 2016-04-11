@@ -107,9 +107,9 @@ thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 --local thin_cnn = protos.cnn:clone('weight', 'bias')
 local thin_cnn
 if #opt.gpus > 1 then
-  thin_cnn = protos.cnn:get(1):clone('weight', 'bias')
+  thin_cnn = protos.cnn:get(1):clone('weight', 'bias', 'running_mean', 'running_std', 'running_var')
 else
-  thin_cnn = protos.cnn:clone('weight', 'bias')
+  thin_cnn = protos.cnn:clone('weight', 'bias', 'runing_mean', 'running_std', 'running_var')
 end
 -- sanitize all modules of gradient storage so that we dont save big checkpoints
 net_utils.sanitize_gradients(thin_cnn)
