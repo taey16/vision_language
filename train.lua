@@ -102,7 +102,7 @@ assert(params:nElement() == grad_params:nElement())
 -- for checkpointing to write significantly smaller checkpoint files
 local thin_lm = protos.lm:clone()
 -- TODO: we are assuming that LM has specific members! figure out clean way to get rid of, not modular.
-thin_lm.core:share(protos.lm.core, 'weight', 'bias')
+thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 --local thin_cnn = protos.cnn:clone('weight', 'bias')
 local thin_cnn
