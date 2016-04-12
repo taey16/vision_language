@@ -11,7 +11,7 @@ cudnn.verbose = false
 
 local agent_path = '/works/vision_language'
 package.path = string.format('%s/?.lua;', agent_path) .. package.path
-print(string.format('Agent path: %s', agent_path))
+print(string.format('agent path: %s', agent_path))
 local utils = require 'misc.utils'
 require 'misc.DataLoader'
 require 'misc.DataLoaderRaw'
@@ -104,7 +104,7 @@ protos.crit = nn.LanguageModelCriterion()
 protos.lm:createClones()
 for k,v in pairs(protos) do v:cuda() end
 --protos.cnn:evaluate()
---protos.lm:evaluate()
+protos.lm:evaluate()
 
 
 local function eval_split(split, evalopt)
