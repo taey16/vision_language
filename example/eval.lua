@@ -7,7 +7,7 @@ require 'cunn'
 require 'cudnn'
 cudnn.benchmark = true
 cudnn.fastest = true
-cudnn.verbose = false
+cudnn.verbose = true
 
 local agent_path = '/works/vision_language'
 package.path = string.format('%s/?.lua;', agent_path) .. package.path
@@ -25,14 +25,14 @@ local model_filename =
 local image_size = 342
 local crop_size = 299
 local seq_length = 14
-local batch_size = 32
+local batch_size = 16
 
 -------------------------------------------------------------------------------
 -- Input arguments and options
 -------------------------------------------------------------------------------
 cmd = torch.CmdLine()
 cmd:text()
-cmd:text('Train an Image Captioning model')
+cmd:text('Testing an Image Captioning model')
 cmd:text()
 cmd:text('Options')
 
@@ -103,7 +103,7 @@ protos.crit = nn.LanguageModelCriterion()
 -- reconstruct clones inside the language model
 protos.lm:createClones()
 for k,v in pairs(protos) do v:cuda() end
---protos.cnn:evaluate()
+protos.cnn:evaluate()
 protos.lm:evaluate()
 
 

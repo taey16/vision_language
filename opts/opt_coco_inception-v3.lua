@@ -6,7 +6,9 @@ local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
+  '/storage/ImageNet/ILSVRC2012/model/inception-v3-2015-12-05/inception-v3-2015-12-05.cudnn-v4.t7'
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
+  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_19.bn_removed.t7'
   --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
 local image_size = 342
 local crop_size = 299
@@ -17,31 +19,37 @@ local rnn_size = 384
 local num_rnn_layers = 3
 local seq_length = -1
 local input_encoding_size = 2048
-local rnn_type = 'rnn'
+local use_bn = 'bn'--'original'
+local init_gamma = 0.1
+local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.5
+local drop_prob_lm = 0.0--0.5
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 4e-4
+local learning_rate = 0.001--4e-4
+local alpha = 0.9
 local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start= 300000
 local learning_rate_decay_every= 50000
-local finetune_cnn_after = -1
+local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 1e-5
-local cnn_weight_decay = 0.0000001
+local cnn_learning_rate = 0.001--1e-5
+local cnn_weight_decay = 0.00001--0.0000001
 
-local gpus = {1}
+local gpus = {1,2}
 local retrain_iter = 0 
 local start_from = 
   ''
 local experiment_id = string.format(
-  '_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
-  batch_size, flip_jitter, crop_jitter, 
-  rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
-  learning_rate, learning_rate_decay_start, learning_rate_decay_seed, learning_rate_decay_every, 
-  funetune_cnn_after, cnn_learning_rate, cnn_weight_decay
+  'inception-v3-2015-12-05_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  --'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
+  batch_size, 
+  flip_jitter, crop_jitter, 
+  use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
+  optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
+  finetune_cnn_after, cnn_learning_rate, cnn_weight_decay
 )
 local checkpoint_path = string.format(
   '/storage/coco/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
@@ -89,6 +97,10 @@ cmd:option('-seq_length', seq_length,
   'number of seq. length (without EOS/SOS token)')
 cmd:option('-rnn_type', rnn_type,
   'rnn type [rnn | lstm | gru | SCRNN(shortcut-RNN)]')
+cmd:option('-use_bn', use_bn,
+  'use bn or not [bn | original]')
+cmd:option('-init_gamma', init_gamma,
+  'initial gamma for BN')
 cmd:option('-rnn_activation', rnn_activation,
   'activation for LSTM/RNN [tanh | relu | none]')
 
@@ -116,19 +128,16 @@ cmd:option('-learning_rate_decay_start', learning_rate_decay_start,
   'at what iteration to start decaying learning rate? (-1 = dont)')
 cmd:option('-learning_rate_decay_every', learning_rate_decay_every, 
   'every how many iterations thereafter to drop LR by half?')
-cmd:option('-optim_alpha',0.8,
+cmd:option('-optim_alpha', alpha,
   'alpha for adagrad/rmsprop/momentum/adam')
 cmd:option('-optim_beta',0.999, 'beta used for adam')
 cmd:option('-optim_epsilon',1e-8,
   'epsilon that goes into denominator for smoothing')
 
 -- Optimization: for the CNN
-cmd:option('-cnn_optim', cnn_optimizer,
-  'optimization to use for CNN')
-cmd:option('-cnn_optim_alpha',0.9,
-  'alpha for momentum of CNN')
-cmd:option('-cnn_optim_beta',0.999,
-  'beta for momentum of CNN')
+cmd:option('-cnn_optim', cnn_optimizer, 'optimization to use for CNN')
+cmd:option('-cnn_optim_alpha',0.9, 'alpha for momentum of CNN')
+cmd:option('-cnn_optim_beta',0.999, 'beta for momentum of CNN')
 cmd:option('-cnn_learning_rate', cnn_learning_rate,
   'learning rate for the CNN')
 cmd:option('-cnn_weight_decay', cnn_weight_decay, 
@@ -139,7 +148,7 @@ cmd:option('-train_samples', total_samples_train - total_samples_valid,
   '# of samples in training set')
 cmd:option('-val_images_use', total_samples_valid, 
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-save_checkpoint_every', math.floor((total_samples_train-total_samples_valid)/batch_size/4.0), 
+cmd:option('-save_checkpoint_every', math.floor((total_samples_train-total_samples_valid)/batch_size), 
   'how often to save a model checkpoint?')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
