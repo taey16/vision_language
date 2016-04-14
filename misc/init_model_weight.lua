@@ -15,7 +15,6 @@ local nn_init = {}
 function nn_init.MSRinit(net)
   local function Convinit(module_type)
     for k, v in pairs(net:findModules(module_type)) do
-      print('Convinit')
       -- n = k^2 * c
       local n = v.kW * v.kH * v.nOutputPlane
       -- \sqrt{2/n}
@@ -30,11 +29,14 @@ function nn_init.MSRinit(net)
       else
         v.bias:zero()
       end
+      print(string.format(
+        'Convinit Kaiming (is bias nil? %s)', tostring(v.bias == nil)))
     end
   end
   local function BNinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
-      print(string.format('BNinit: weight %f', opt.init_gamma))
+      print(string.format(
+        'BNinit: weight %f (is bias nil? %s)', opt.init_gamma, tostring(v.bias == nil)))
       v.weight:fill(opt.init_gamma)
       v.bias:zero()
     end
@@ -43,7 +45,7 @@ function nn_init.MSRinit(net)
   local function Linearinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
       print(string.format(
-        'Linearinit: bias 0.0 (is it nil? %s)', tostring(v.bias == nil)))
+        'Linearinit: bias to 0.0 (is bias nil? %s)', tostring(v.bias == nil)))
       if v.bias then
         v.bias:zero()
       end
@@ -52,7 +54,7 @@ function nn_init.MSRinit(net)
   end
   local function Addinit(module_type)
     for k,v in pairs(net:findModules(module_type)) do
-      print('Addinit: bias 0.0')
+      print('Addinit: bias to 0.0')
       v.bias:zero()
     end
     io.flush()
@@ -69,3 +71,4 @@ function nn_init.MSRinit(net)
 end
 
 return nn_init
+

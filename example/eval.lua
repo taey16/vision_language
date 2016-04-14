@@ -2,7 +2,16 @@ require 'paths'
 require 'torch'
 require 'nn'
 require 'nngraph'
-package.path = '../?.lua;' .. package.path
+require 'cutorch'
+require 'cunn'
+require 'cudnn'
+cudnn.benchmark = true
+cudnn.fastest = true
+cudnn.verbose = false
+
+local agent_path = '/works/vision_language'
+package.path = string.format('%s/?.lua;', agent_path) .. package.path
+print(string.format('agent path: %s', agent_path))
 local utils = require 'misc.utils'
 require 'misc.DataLoader'
 require 'misc.DataLoaderRaw'
@@ -11,11 +20,12 @@ require 'models.FeatExpander'
 local net_utils = require 'misc.net_utils'
 
 local model_filename = 
-  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
+  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
+  --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
 local image_size = 342
 local crop_size = 299
 local seq_length = 14
-local batch_size = 1
+local batch_size = 32
 
 -------------------------------------------------------------------------------
 -- Input arguments and options
@@ -33,14 +43,17 @@ cmd:option('-image_size', image_size, 'size of input image')
 cmd:option('-crop_size', crop_size, 'size of input image')
 cmd:option('-seq_length', seq_length, 'max. length of a sentence')
 cmd:option('-batch_size', batch_size, 'if > 0 then overrule, otherwise load from checkpoint.')
-cmd:option('-num_images', 40000, 'how many images to use when periodically evaluating the loss? (-1 = all)')
+cmd:option('-num_images', 
+  50000,
+  --40000, 
+  'how many images to use when periodically evaluating the loss? (-1 = all)')
 cmd:option('-language_eval', 0, 'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
 cmd:option('-dump_images', 0, 'Dump images into vis/imgs folder for vis? (1=yes,0=no)')
-cmd:option('-dump_json', 1, 'Dump json with predictions into vis folder? (1=yes,0=no)')
+cmd:option('-dump_json', 0, 'Dump json with predictions into vis folder? (1=yes,0=no)')
 cmd:option('-dump_path', 0, 'Write image paths along with predictions into vis json? (1=yes,0=no)')
 -- Sampling options
 cmd:option('-sample_max', 1, '1 = sample argmax words. 0 = sample from distributions.')
-cmd:option('-beam_size', 2, 'used when sample_max = 1, indicates number of beams in beam search. Usually 2 or 3 works well. More is not better. Set this to 1 for faster runtime but a bit worse performance.')
+cmd:option('-beam_size', 1, 'used when sample_max = 1, indicates number of beams in beam search. Usually 2 or 3 works well. More is not better. Set this to 1 for faster runtime but a bit worse performance.')
 cmd:option('-temperature', 1.0, 'temperature when sampling from distributions (i.e. when sample_max = 0). Lower = "safer" predictions.')
 -- For evaluation on a folder of images:
 cmd:option('-image_folder', '', 'If this is nonempty then will predict on the images in this folder path')
@@ -51,30 +64,17 @@ cmd:option('-input_json','','path to the json file containing additional info an
 cmd:option('-split', 'test', 'if running on MSCOCO images, which split to use: val|test|train')
 cmd:option('-coco_json', '', 'if nonempty then use this file in DataLoaderRaw (see docs there). Used only in MSCOCO test evaluation, where we have a specific json file of only test set images.')
 -- misc
-cmd:option('-backend', 'cudnn', 'nn|cudnn')
 cmd:option('-id', 'evalscript', 'an id identifying this run/job. used only if language_eval = 1 for appending to intermediate files')
 cmd:option('-seed', 123, 'random number generator seed to use')
-cmd:option('-gpuid', 0, 'which gpu to use. -1 = use CPU')
 cmd:text()
 
--------------------------------------------------------------------------------
--- Basic Torch initializations
--------------------------------------------------------------------------------
+
 local opt = cmd:parse(arg)
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor') -- for CPU
+cutorch.manualSeed(opt.seed)
 
-if opt.gpuid >= 0 then
-  require 'cutorch'
-  require 'cunn'
-  if opt.backend == 'cudnn' then require 'cudnn' end
-  cutorch.manualSeed(opt.seed)
-  --cutorch.setDevice(opt.gpuid + 1) -- note +1 because lua is 1-indexed
-end
 
--------------------------------------------------------------------------------
--- Load the model checkpoint to evaluate
--------------------------------------------------------------------------------
 assert(string.len(opt.model) > 0, 'must provide a model')
 local checkpoint = torch.load(opt.model)
 -- override and collect parameters
@@ -88,9 +88,7 @@ for k,v in pairs(fetch) do
 end
 local vocab = checkpoint.vocab -- ix -> word mapping
 
--------------------------------------------------------------------------------
--- Create the Data Loader instance
--------------------------------------------------------------------------------
+
 local loader
 if string.len(opt.image_folder) == 0 then
   loader = DataLoader{h5_file = opt.input_h5, json_file = opt.input_json}
@@ -98,27 +96,25 @@ else
   loader = DataLoaderRaw{folder_path = opt.image_folder, coco_json = opt.coco_json}
 end
 
--------------------------------------------------------------------------------
--- Load the networks from model checkpoint
--------------------------------------------------------------------------------
+
 local protos = checkpoint.protos
 protos.expander = nn.FeatExpander(opt.seq_per_img)
 protos.crit = nn.LanguageModelCriterion()
-protos.lm:createClones() -- reconstruct clones inside the language model
+-- reconstruct clones inside the language model
+protos.lm:createClones()
 for k,v in pairs(protos) do v:cuda() end
 --protos.cnn:evaluate()
 protos.lm:evaluate()
 
--------------------------------------------------------------------------------
--- Evaluation fun(ction)
--------------------------------------------------------------------------------
+
 local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local num_images = utils.getopt(evalopt, 'num_images', true)
 
   --protos.cnn:evaluate()
   --protos.lm:evaluate()
-  loader:resetIterator(split) -- rewind iteator back to first datapoint in the split
+  -- rewind iteator back to first datapoint in the split
+  loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
   local accuracy = 0
@@ -168,11 +164,11 @@ local function eval_split(split, evalopt)
       acc, pplx = protos.crit:accuracy(logprobs, data.labels)
       local avg_acc_per_seq = 0
       --for i=1,opt.seq_length do 
-      for i=1,8 do 
+      for i=1,2 do 
         avg_acc_per_seq = avg_acc_per_seq + acc[i] 
       end
       --avg_acc_per_seq = avg_acc_per_seq / opt.seq_length
-      avg_acc_per_seq = avg_acc_per_seq / 8
+      avg_acc_per_seq = avg_acc_per_seq / 2
       --accuracy = accuracy + acc[2]
       accuracy = accuracy + avg_acc_per_seq
       perplexity = perplexity + pplx
@@ -186,7 +182,8 @@ local function eval_split(split, evalopt)
     local seq = protos.lm:sample(feats, sample_opts)
     local sents = net_utils.decode_sequence(vocab, seq)
     for k=1,#sents do
-      local entry = {image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
+      local entry = {
+        image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
       if opt.dump_path == 1 then
         entry.file_name = data.infos[k].file_path
       end

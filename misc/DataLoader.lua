@@ -25,7 +25,7 @@ function DataLoader:__init(opt)
   self.num_channels = images_size[2]
   self.max_image_size = images_size[3]
   print(string.format('read %d images of size %dx%dx%d', self.num_images, 
-            self.num_channels, self.max_image_size, self.max_image_size))
+    self.num_channels, self.max_image_size, self.max_image_size))
 
   -- load in the sequence data
   local seq_size = self.h5_file:read('/labels'):dataspaceSize()

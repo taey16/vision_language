@@ -6,7 +6,6 @@ local GRU = require 'models.GRU'
 local SCRNN = require 'models.SCRNN'
 local RNN = require 'models.RNN'
 local init_utils = require 'misc.init_model_weight'
---require 'cephes' -- for cephes.log2
 
 -------------------------------------------------------------------------------
 -- Language Model core
@@ -91,7 +90,7 @@ end
 
 function layer:createClones()
   -- construct the net clones
-  print('constructing clones inside the LanguageModel, (weight, bias, gradWeight, gradBias, running_mean, running_std')
+  print('constructing clones inside the LanguageModel, (weight, bias, gradWeight, gradBias, running_mean, running_std)')
   self.clones = {self.core}
   self.lookup_tables = {self.lookup_table}
   for t=2,self.seq_length+2 do
@@ -550,7 +549,6 @@ function crit:accuracy(input, seq)
         if predicted_word_label[1] == target_index then
           -- accumulate 
           hit_count[t-1] = hit_count[t-1] + 1
-          --perplexity = perplexity - cephes.log2(prob:squeeze())
           perplexity = perplexity - math.log(prob:squeeze())
         end
       end
@@ -559,7 +557,6 @@ function crit:accuracy(input, seq)
   end
   -- nomalize by number of predictions that were made
   accuracy = hit_count:div(n)
-  --perplexity = cephes.pow(2.0, perplexity / n )
   perplexity = math.pow(2.0, perplexity / n )
   return accuracy, perplexity
 end

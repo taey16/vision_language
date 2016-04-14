@@ -13,10 +13,9 @@ require 'misc.optim_updates'
 require 'models.LanguageModel'
 require 'models.FeatExpander'
 require 'optim'
---require 'cephes' -- for cephes.log2
 
 
-local opt = paths.dofile('opts/opt_attribute.lua')
+opt = paths.dofile('opts/opt_attribute.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_jacket_onepiece.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_knit_inception-v3.lua')
 --local opt = paths.dofile('opts/opt_attribute_tshirts_shirts_blous_inception-v3.lua')
@@ -37,11 +36,13 @@ if string.len(opt.start_from) > 0 then
   protos = loaded_checkpoint.protos
   net_utils.unsanitize_gradients(protos.cnn)
   local lm_modules = protos.lm:getModulesList()
-  for k,v in pairs(lm_modules) do net_utils.unsanitize_gradients(v) end
-  protos.crit = nn.LanguageModelCriterion() -- not in checkpoints, create manually
-  protos.expander = nn.FeatExpander(opt.seq_per_img) -- not in checkpoints, create manually
+  for k,v in pairs(lm_modules) do 
+    net_utils.unsanitize_gradients(v) 
+  end
+  -- not in checkpoints, create manually
+  protos.crit = nn.LanguageModelCriterion()
+  protos.expander = nn.FeatExpander(opt.seq_per_img)
   cudnn.convert(protos.cnn, cudnn)
-  print(protos.cnn)
 else
   -- create protos from scratch
   -- intialize language model
@@ -67,7 +68,7 @@ else
   lmOpt.rnn_activation = opt.rnn_activation
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
-  -- initialize the ConvNet
+  -- initialize the pretrained ConvNet
   protos.cnn = net_utils.build_cnn(
     {encoding_size = opt.input_encoding_size, model_filename = opt.torch_model}
   )
@@ -83,10 +84,10 @@ cudnn.benchmark = true
 cudnn.fastest = true
 if #opt.gpus > 1 then
   protos.cnn = parallel_utils.makeDataParallel(protos.cnn, opt.gpus)
-  print(protos.cnn)
 end
 -- ship everything to GPU, maybe
 for k,v in pairs(protos) do v:cuda() end
+print(protos.cnn)
 
 -- flatten and prepare all model parameters to a single vector. 
 -- Keep CNN params separate in case we want to try to get fancy with different optims on LM/CNN
@@ -94,22 +95,24 @@ local params, grad_params = protos.lm:getParameters()
 local cnn_params, cnn_grad_params = protos.cnn:getParameters()
 print('total number of parameters in LM: ', params:nElement())
 print('total number of parameters in CNN: ', cnn_params:nElement())
-assert(params:nElement() == grad_params:nElement())
---assert(cnn_params:nElement() == cnn_grad_params:nElement())
+assert(params:nElement() == grad_params:nElement(), 
+  'ERROR check params:nElement() == grad_params:nElement()')
+assert(cnn_params:nElement() == cnn_grad_params:nElement(),
+  'ERROR check cnn_params:nElement() == cnn_grad_params:nElement()')
 
 -- construct thin module clones that share parameters with the actual
 -- modules. These thin module will have no intermediates and will be used
 -- for checkpointing to write significantly smaller checkpoint files
 local thin_lm = protos.lm:clone()
--- TODO: we are assuming that LM has specific members! figure out clean way to get rid of, not modular.
-thin_lm.core:share(protos.lm.core, 'weight', 'bias')
+thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
---local thin_cnn = protos.cnn:clone('weight', 'bias')
 local thin_cnn
 if #opt.gpus > 1 then
-  thin_cnn = protos.cnn:get(1):clone('weight', 'bias', 'running_mean', 'running_std', 'running_var')
+  thin_cnn = protos.cnn:get(1):clone()
+  thin_cnn:share(protos.cnn:get(1), 'weight', 'bias', 'running_mean', 'running_std', 'running_var')
 else
-  thin_cnn = protos.cnn:clone('weight', 'bias', 'runing_mean', 'running_std', 'running_var')
+  thin_cnn = protos.cnn:clone()
+  thin_cnn:share(protos.cnn, 'weight', 'bias', 'running_mean', 'running_std', 'running_var')
 end
 -- sanitize all modules of gradient storage so that we dont save big checkpoints
 net_utils.sanitize_gradients(thin_cnn)
@@ -129,9 +132,14 @@ collectgarbage()
 local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local val_images_use = utils.getopt(evalopt, 'val_images_use', true)
+  local bn_rnn = utils.getopt(evalopt, 'use_bn')
 
   protos.cnn:evaluate()
-  protos.lm:evaluate()
+  -- it doesnt seemd to work when using BN-LSTM
+  if bn_rnn == 'original' then
+    protos.lm:evaluate()
+  end
+
   -- rewind iteator back to first datapoint in the split
   loader:resetIterator(split)
   local n = 0
@@ -191,17 +199,14 @@ local function eval_split(split, evalopt)
     local ix1 = math.min(data.bounds.it_max, val_images_use)
     if verbose then
       io.flush(print(string.format(
-        'evaluating validation performance... %d/%d (%f, %f, %f)', ix0-1, ix1, loss, acc[2], pplx
-      )))
+        'evaluating validation performance... %d/%d (loss: %f, acc[2]: %f, pplx: %f)', 
+        ix0-1, ix1, loss, acc[2], pplx)))
     end
 
     if loss_evals % 10 == 0 then collectgarbage() end
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
     if n >= val_images_use then break end -- we've used enough images
   end
-
-  --perplexity = -cephes.log2(logprobs_sum)
-  --perplexity = cephes.pow(2.0, perplexity / loss_evals)
 
   local lang_stats
   if opt.language_eval == 1 then
@@ -252,7 +257,6 @@ local function lossFun(finetune_cnn)
   -- forward the language model criterion
   local loss = protos.crit:forward(logprobs, data.labels)
   -- compute perplexity
-  --local perplexity = cephes.pow(2.0, -cephes.log2(logprobs) / opt.batch_size)
   local perplexity, accuracy = 0, 0
   accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
   
@@ -321,28 +325,26 @@ while true do
   if iter > opt.learning_rate_decay_start and opt.learning_rate_decay_start >= 0 then
     local frac = (iter - opt.learning_rate_decay_start) / opt.learning_rate_decay_every
     local decay_factor = math.pow(opt.learning_rate_decay_seed, frac)
-    learning_rate = learning_rate * decay_factor -- set the decayed rate
+    learning_rate = learning_rate * decay_factor
     cnn_learning_rate = cnn_learning_rate * decay_factor
   end
 
-  -- perform a parameter update
-  if opt.optim == 'rmsprop' then
+  if opt.optim == 'adam' then
+    adam(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_beta, opt.optim_epsilon, optim_state)
+  elseif opt.optim == 'rmsprop' then
     rmsprop(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_epsilon, optim_state)
   elseif opt.optim == 'adagrad' then
     adagrad(params, grad_params, learning_rate, opt.optim_epsilon, optim_state)
-  elseif opt.optim == 'sgd' then
-    sgd(params, grad_params, opt.learning_rate)
+  elseif opt.optim == 'nag' then
+    nag(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
   elseif opt.optim == 'sgdm' then
     sgdm(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
-  elseif opt.optim == 'sgdmom' then
-    sgdmom(params, grad_params, learning_rate, opt.optim_alpha, optim_state)
-  elseif opt.optim == 'adam' then
-    adam(params, grad_params, learning_rate, opt.optim_alpha, opt.optim_beta, opt.optim_epsilon, optim_state)
+  elseif opt.optim == 'sgd' then
+    sgd(params, grad_params, opt.learning_rate)
   else
-    error('bad option opt.optim')
+    error('bad option opt.optim', opt.optim)
   end
 
-  -- do a cnn update (if finetuning, and if rnn above us is not warming up right now)
   if finetune_cnn then
     if opt.cnn_optim == 'nag' then
       nag(cnn_params, cnn_grad_params, cnn_learning_rate, opt.cnn_optim_alpha, cnn_optim_state)
@@ -351,11 +353,10 @@ while true do
     elseif opt.cnn_optim == 'sgd' then
       sgd(cnn_params, cnn_grad_params, cnn_learning_rate)
     elseif opt.cnn_optim == 'adam' then
-      adam(
-        cnn_params, cnn_grad_params, 
+      adam( cnn_params, cnn_grad_params, 
         cnn_learning_rate, opt.cnn_optim_alpha, opt.cnn_optim_beta, opt.optim_epsilon, cnn_optim_state)
     else
-      error('bad option for opt.cnn_optim')
+      error('bad option for opt.cnn_optim', opt.cnn_optim)
     end
   end
 
@@ -363,12 +364,11 @@ while true do
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
     io.flush(print(string.format(
-      '%d/%d: %.2f, trn loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
+      '%d/%d: %.2f, loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
       iter, number_of_batches, epoch,
       losses.total_loss, losses.accuracy[2], losses.total_perplexity,
       learning_rate, cnn_learning_rate, 
-      tostring(finetune_cnn), opt.optim, elapsed_trn
-    )))
+      tostring(finetune_cnn), opt.optim, elapsed_trn)))
   end
 
   -- save checkpoint once in a while (or on final iteration)
@@ -383,7 +383,7 @@ while true do
     local start_tst = tm:time().real
     -- evaluate the validation performance
     local val_loss, val_predictions, lang_stats, perplexity, val_accuracy = 
-      eval_split('val', {val_images_use = opt.val_images_use})
+      eval_split('val', {val_images_use = opt.val_images_use, use_bn = opt.use_bn})
     local elapsed_tst = tm:time().real
     io.flush( print(string.format(
         'validation loss: %f, perplexity: %f, accuracy: %f', val_loss, perplexity, val_accuracy
