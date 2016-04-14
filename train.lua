@@ -286,9 +286,7 @@ local function lossFun(finetune_cnn)
   end
   -----------------------------------------------------------------------------
 
-  -- and lets get out!
-  local losses = {total_loss = loss, total_perplexity = perplexity, accuracy = accuracy}
-  return losses
+  return {total_loss = loss, total_perplexity = perplexity, accuracy = accuracy}
 end
 
 local logger_trn = 
