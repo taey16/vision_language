@@ -17,8 +17,9 @@ local sample_opts = agent.sample_opts
 agent_filename = string.split(agent_filename, '/')
 local input_list_path = '/storage/attribute'
 local input_list =
+  '/storage/attribute/PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_shoes_bags_swimwears.csv'
   -- left 490000
-  'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from500000.csv'
+  --'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from500000.csv'
   -- first 500000
   --'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from0.csv'
   --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_knit_seed123_limit300000.csv'
@@ -49,7 +50,7 @@ for iter, url in pairs(url_list) do
   local image_file= demon_utils.download_image(image_url)
   io.flush(print(iter .. ' ' .. image_url))
 
-  local sents = agent.get_attribute(image_file)
+  local sents, probs = agent.get_attribute(image_file)
   if sents then
     outfile_dic:write(string.format('%s,%s\n', image_url, sents[1]))
     --print(sents[1])
