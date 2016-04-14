@@ -283,6 +283,7 @@ if __name__ == "__main__":
 
   parser.add_argument('--input_filename', default= \
     '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt',
@@ -294,7 +295,8 @@ if __name__ == "__main__":
     #'/storage/freebee/csv_backup/tshirts_excel_1453264869210.csv.image_sentence.txt',
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_val', default= \
-    50000,
+    40000,
+    #50000,
     #40000,
     #40000,
     #8000,
@@ -305,7 +307,8 @@ if __name__ == "__main__":
     type=int, 
     help='number of images to assign to validation data (for CV etc)')
   parser.add_argument('--num_test', default= \
-    50000,
+    40000,
+    #50000,
     #40000,
     #40000,
     #8000,
@@ -316,7 +319,8 @@ if __name__ == "__main__":
     type=int, 
     help='number of images to assign to tesst data (for CV etc)')
   parser.add_argument('--output_json', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff1000.json',
+    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff100.json',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff1000.json',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.json',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt.cutoff100.json',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json',
@@ -328,7 +332,8 @@ if __name__ == "__main__":
     #'/storage/freebee/tshirts.image_sentence.txt.json',
     help='output json file')
   parser.add_argument('--output_h5', default= \
-    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff1000.h5',
+    '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff100.h5',
+    #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff1000.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.multi_instance.txt.cutoff100.h5',
     #'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5',
@@ -339,7 +344,7 @@ if __name__ == "__main__":
     #'/storage/freebee/tshirts_shirts.image_sentence.txt.h5',
     #'/storage/freebee/tshirts.image_sentence.txt.h5',
     help='output h5 file')
-  parser.add_argument('--word_count_threshold', default=1000, type=int, 
+  parser.add_argument('--word_count_threshold', default=100, type=int, 
     help='only words that occur more than this number of times will be put in vocab')
   parser.add_argument('--image_dim', default=342, type=int, help='size of image')
 
