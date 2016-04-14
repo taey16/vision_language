@@ -32,7 +32,7 @@ local batch_size = 16
 -------------------------------------------------------------------------------
 cmd = torch.CmdLine()
 cmd:text()
-cmd:text('Train an Image Captioning model')
+cmd:text('Testing an Image Captioning model')
 cmd:text()
 cmd:text('Options')
 
