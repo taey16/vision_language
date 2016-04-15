@@ -10,7 +10,7 @@ cudnn.fastest = true
 cudnn.verbose = true
 
 local agent_path = '/works/vision_language'
-package.path = string.format('%s/?.lua;', agent_path) .. package.path
+package.path = paths.concat(agent_path, '?.lua;') .. package.path
 print(string.format('agent path: %s', agent_path))
 local utils = require 'misc.utils'
 require 'misc.DataLoader'
@@ -20,12 +20,13 @@ require 'models.FeatExpander'
 local net_utils = require 'misc.net_utils'
 
 local model_filename = 
-  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
+  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635.t7'
+  --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
   --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
 local image_size = 342
 local crop_size = 299
 local seq_length = 14
-local batch_size = 16
+local batch_size = 1
 
 -------------------------------------------------------------------------------
 -- Input arguments and options
@@ -95,6 +96,7 @@ if string.len(opt.image_folder) == 0 then
 else
   loader = DataLoaderRaw{folder_path = opt.image_folder, coco_json = opt.coco_json}
 end
+print(loader.ix_to_word)
 
 
 local protos = checkpoint.protos
@@ -111,8 +113,6 @@ local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local num_images = utils.getopt(evalopt, 'num_images', true)
 
-  --protos.cnn:evaluate()
-  --protos.lm:evaluate()
   -- rewind iteator back to first datapoint in the split
   loader:resetIterator(split)
   local n = 0
@@ -132,6 +132,11 @@ local function eval_split(split, evalopt)
     }
 
     data.labels = data.labels[{{1,opt.seq_length},{}}]
+    local gt_sents = ''
+    for i=1,opt.seq_length do
+      gt_sents = 
+        string.format('%s %s', gt_sents, loader.ix_to_word[tostring(data.labels[i][1])])
+    end
 
     data.images = net_utils.preprocess(
       data.images, opt.crop_size, false, false
@@ -154,6 +159,7 @@ local function eval_split(split, evalopt)
     -- evaluate loss if we have the labels
     local loss = 0
     local acc,pplx = 0, 0
+    local acc_per_seq = 0
     if data.labels then
       local expanded_feats = protos.expander:forward(feats)
       local logprobs = protos.lm:forward{expanded_feats, data.labels}
@@ -162,15 +168,14 @@ local function eval_split(split, evalopt)
       loss_sum = loss_sum + loss
 
       acc, pplx = protos.crit:accuracy(logprobs, data.labels)
-      local avg_acc_per_seq = 0
-      --for i=1,opt.seq_length do 
-      for i=1,2 do 
-        avg_acc_per_seq = avg_acc_per_seq + acc[i] 
+      for i=1,opt.seq_length do 
+      --for i=2,2 do 
+        acc_per_seq = acc_per_seq + acc[i] 
       end
-      --avg_acc_per_seq = avg_acc_per_seq / opt.seq_length
-      avg_acc_per_seq = avg_acc_per_seq / 2
+      --acc_per_seq = acc_per_seq / opt.seq_length
+      --avg_acc_per_seq = avg_acc_per_seq / 1
       --accuracy = accuracy + acc[2]
-      accuracy = accuracy + avg_acc_per_seq
+      accuracy = accuracy + acc_per_seq
       perplexity = perplexity + pplx
 
       loss_evals = loss_evals + 1
@@ -180,10 +185,14 @@ local function eval_split(split, evalopt)
     local sample_opts = { 
       sample_max = opt.sample_max, beam_size = opt.beam_size, temperature = opt.temperature }
     local seq = protos.lm:sample(feats, sample_opts)
-    local sents = net_utils.decode_sequence(vocab, seq)
+    local sents, num_words = net_utils.decode_sequence(vocab, seq)
+    acc_per_seq = (acc_per_seq-1) / num_words
     for k=1,#sents do
       local entry = {
-        image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
+        image_id = data.infos[k].id, 
+        file_path = data.infos[k].file_path, 
+        caption = sents[k], 
+        gt = gt_sents}
       if opt.dump_path == 1 then
         entry.file_name = data.infos[k].file_path
       end
@@ -195,7 +204,8 @@ local function eval_split(split, evalopt)
         os.execute(cmd) -- dont think there is cleaner way in Lua
       end
       if verbose then
-        print(string.format('image %s: %s %s', entry.image_id, entry.file_path, entry.caption))
+        print(string.format('image %s: %s predicted: %s',entry.image_id, entry.file_path, entry.caption))
+        print(string.format('image %s: %s gt:       %s', entry.image_id, entry.file_path, entry.gt))
       end
     end
 
@@ -203,9 +213,9 @@ local function eval_split(split, evalopt)
     local ix0 = data.bounds.it_pos_now
     local ix1 = math.min(data.bounds.it_max, num_images)
     if verbose then
-      print(string.format('evaluating performance... %d/%d (loss: %f, acc: %f, pplx: %f)', 
+      print(string.format('evaluating performance... %d/%d (loss: %f, precision: %f, pplx: %f)', 
         ix0-1, ix1, 
-        loss, acc[2], pplx))
+        loss, acc_per_seq, pplx))
     end
 
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out

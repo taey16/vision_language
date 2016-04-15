@@ -522,7 +522,8 @@ function crit:accuracy(input, seq)
   assert(D == L-2, 'input Tensor should be 2 larger in time')
 
   -- hit count for opt.seq_length and <EOS> token
-  local hit_count = torch.FloatTensor(D+1):fill(0)
+  --local hit_count = torch.FloatTensor(D+1):fill(0)
+  local hit_count = torch.FloatTensor(D):fill(0)
   local perplexity = 0
   local accuracy = 0
   local n = 0
