@@ -1,14 +1,17 @@
 
 local input_h5 = 
-  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff50.h5'
+  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.h5'
+  --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff50.h5'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.h5'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.h5'
 local input_json = 
-  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff50.json'
+  '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.json'
+  --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff50.json'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.json'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest.image_sentence.txt.shuffle.txt.cutoff100.json'
 local total_samples_train = 
-  713235 
+  721544 + 40000 + 40000
+  --713235 
   --613235 + 50000 + 50000
 local total_samples_valid = 
   40000
@@ -17,7 +20,8 @@ local total_samples_test =
   40000
   --50000
 local dataset_name = 
-  'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat'
+  'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra'
+  --'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat'
   --'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest'
 
 local torch_model= 
@@ -43,12 +47,16 @@ local batch_size = 16
 local optimizer = 'adam'
 local learning_rate = 0.001
 local alpha = 0.9
-local learning_rate_decay_seed = 0.94
+local learning_rate_decay_seed = 
+  0.9
+  --0.94
 local learning_rate_decay_start = 
-  39577 * 12
+  45096 * 12
+  --39577 * 12
   --38327 * 12--23694 * 10
 local learning_rate_decay_every = 
-  39577
+  45096
+  --39577
   --38327--23694
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
