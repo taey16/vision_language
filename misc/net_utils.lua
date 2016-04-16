@@ -193,6 +193,7 @@ each column is a sequence. ix_to_word gives the mapping to strings, as a table
 function net_utils.decode_sequence(ix_to_word, seq)
   local D,N = seq:size(1), seq:size(2)
   local out = {}
+  local word_count = 0
   for i=1,N do
     local txt = ''
     for j=1,D do
@@ -201,10 +202,11 @@ function net_utils.decode_sequence(ix_to_word, seq)
       if not word then break end -- END token, likely. Or null token
       if j >= 2 then txt = txt .. ' ' end
       txt = txt .. word
+      word_count = word_count + 1
     end
     table.insert(out, txt)
   end
-  return out
+  return out, word_count
 end
 
 
