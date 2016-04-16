@@ -20,7 +20,10 @@ require 'models.FeatExpander'
 local net_utils = require 'misc.net_utils'
 
 local model_filename = 
-  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635.t7'
+  -- 16cate jacket modified
+  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start474924_every39577_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start474924_every39577_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0.t7'
+  -- 16cate
+  --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter191635.t7'
   --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_713235_50000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.94_start383270_every38327_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
   --'/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_459105_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05/model_idresception_ep29_bs16_flipfalse_croptrue_lstm_tanh_hid512_lay2_drop0.2_adam_lr1.000000e-03_seed0.90_start236940_every23694_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05.t7'
 local image_size = 342
@@ -88,6 +91,7 @@ for k,v in pairs(fetch) do
   opt[v] = checkpoint.opt[v] -- copy over options from model
 end
 local vocab = checkpoint.vocab -- ix -> word mapping
+print(vocab)
 
 
 local loader
@@ -96,7 +100,6 @@ if string.len(opt.image_folder) == 0 then
 else
   loader = DataLoaderRaw{folder_path = opt.image_folder, coco_json = opt.coco_json}
 end
-print(loader.ix_to_word)
 
 
 local protos = checkpoint.protos
@@ -132,11 +135,6 @@ local function eval_split(split, evalopt)
     }
 
     data.labels = data.labels[{{1,opt.seq_length},{}}]
-    local gt_sents = ''
-    for i=1,opt.seq_length do
-      gt_sents = 
-        string.format('%s %s', gt_sents, loader.ix_to_word[tostring(data.labels[i][1])])
-    end
 
     data.images = net_utils.preprocess(
       data.images, opt.crop_size, false, false
@@ -187,6 +185,13 @@ local function eval_split(split, evalopt)
     local seq = protos.lm:sample(feats, sample_opts)
     local sents, num_words = net_utils.decode_sequence(vocab, seq)
     acc_per_seq = (acc_per_seq-1) / num_words
+
+    local gt_sents = ''
+    for i=1,opt.seq_length do
+      gt_sents = 
+        string.format('%s %s', gt_sents, vocab[tostring(data.labels[i][1])])
+    end
+
     for k=1,#sents do
       local entry = {
         image_id = data.infos[k].id, 
