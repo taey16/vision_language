@@ -223,7 +223,7 @@ it seems to work, doesn't crash, gives expected looking outputs, and seems to
 improve performance, so I am declaring this correct.
 ]]--
 function layer:sample_beam(imgs, opt)
-  local beam_size = utils.getopt(opt, 'beam_size', 10)
+  local beam_size = utils.getopt(opt, 'beam_size', 2)
   local batch_size, feat_dim = imgs:size(1), imgs:size(2)
   local function compare(a,b) return a.p > b.p end -- used downstream
 
@@ -522,8 +522,8 @@ function crit:accuracy(input, seq)
   assert(D == L-2, 'input Tensor should be 2 larger in time')
 
   -- hit count for opt.seq_length and <EOS> token
-  --local hit_count = torch.FloatTensor(D+1):fill(0)
-  local hit_count = torch.FloatTensor(D):fill(0)
+  local hit_count = torch.FloatTensor(D+1):fill(0)
+  --local hit_count = torch.FloatTensor(D):fill(0)
   local perplexity = 0
   local accuracy = 0
   local n = 0
