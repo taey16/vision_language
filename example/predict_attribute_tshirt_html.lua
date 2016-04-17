@@ -17,7 +17,8 @@ local sample_opts = agent.sample_opts
 agent_filename = string.split(agent_filename, '/')
 local input_list_path = '/storage/attribute'
 local input_list =
-  '/storage/attribute/PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_shoes_bags_swimwears.csv'
+  '/storage/attribute/PBrain_all.csv'
+  --'/storage/attribute/PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_shoes_bags_swimwears.csv'
   -- left 490000
   --'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from500000.csv'
   -- first 500000
