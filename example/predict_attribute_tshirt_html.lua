@@ -56,7 +56,7 @@ for iter, url in pairs(url_list) do
     --print(sents[1])
     os.execute(('rm -f %s'):format(image_file))
 
-    fp_html:write(string.format("        <td><img src=\"%s\" height=\"292\" width=\"292\"></br>\n", image_url))
+    fp_html:write(string.format("        <td><img src=\"%s\" height=\"299\" width=\"299\"></br>\n", image_url))
     fp_html:write(string.format("        <font color=\"green\">%s</font>", sents[1]))
     fp_html:write("      </td>\n")
     fp_html:write("      </td>\n")
