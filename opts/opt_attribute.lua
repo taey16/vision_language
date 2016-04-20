@@ -1,6 +1,5 @@
 
 local input_h5 = 
-<<<<<<< HEAD
   '/data2/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.h5'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff50.h5'
   --'/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat.image_sentence.txt.shuffle.txt.cutoff1000.h5'
@@ -27,7 +26,7 @@ local use_bn = 'original'
 local init_gamma = 0.1
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.0
+local drop_prob_lm = 0.2
 
 local batch_size = 16
 local optimizer = 'adam'
@@ -41,7 +40,7 @@ local learning_rate_decay_start =
 local learning_rate_decay_every = 
   45096
 local finetune_cnn_after = 0
-local cnn_optimizer = 'nag'
+local cnn_optimizer = 'adam'
 local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
@@ -51,13 +50,13 @@ local retrain_iter =
 local start_from = 
   ''
 local experiment_id = string.format(
-  'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
+  'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
   --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
   flip_jitter, crop_jitter, 
   use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
-  optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
+  optimizer, cnn_optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
   finetune_cnn_after, cnn_learning_rate, cnn_weight_decay,
   retrain_iter
 )
