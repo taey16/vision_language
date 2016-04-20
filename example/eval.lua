@@ -106,7 +106,7 @@ protos.cnn:evaluate()
 protos.lm:evaluate()
 
 
-local function eval_split(split, evalopt)
+local function eval_split(split, evalopt, fp_html)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local num_images = utils.getopt(evalopt, 'num_images', true)
 
@@ -182,8 +182,10 @@ local function eval_split(split, evalopt)
 
     local gt_sents = ''
     for i=1,opt.seq_length do
-      gt_sents = 
-        string.format('%s %s', gt_sents, vocab[tostring(data.labels[i][1])])
+      if vocab[tostring(data.labels[i][1])] ~= nil then
+        gt_sents = 
+          string.format('%s %s', gt_sents, vocab[tostring(data.labels[i][1])])
+      end
     end
 
     for k=1,#sents do
@@ -206,7 +208,18 @@ local function eval_split(split, evalopt)
         print(string.format('image %s: %s predicted: %s',entry.image_id, entry.file_path, entry.caption))
         print(string.format('image %s: %s gt:       %s', entry.image_id, entry.file_path, entry.gt))
       end
+      local image_url = entry.file_path:gsub('/data2/freebee/Images', 'http://10.202.35.87/freebee')
+      image_url = entry.file_path:gsub( "/data3/11st/imgdata/", "http://10.202.35.87/freebee3/")
+      fp_html:write(string.format("        <td><img src=\"%s\" height=\"299\" width=\"299\"></br>\n", image_url))
+      fp_html:write(string.format("        <font color=\"black\" size=2>%s</font></br>",entry.caption ))
+      fp_html:write(string.format("        <font color=\"green\" size=2>%s</font>", entry.gt))
+      fp_html:write("      </td>\n")
+      fp_html:write("      </td>\n")
+      if n % 5 == 0 then
+        fp_html:write("    </tr>\n<tr>\n")
+      end
     end
+
 
     -- if we wrapped around the split or used up val imgs budget then bail
     local ix0 = data.bounds.it_pos_now
@@ -231,12 +244,16 @@ local function eval_split(split, evalopt)
   return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
 end
 
+local fp_html = io.open('./cate18.eval.html', 'w')
+fp_html:write("<html>\n  <head>\n    <table>\n      <tr>\n")
 
-local loss, split_predictions, lang_stats, perplexity, accuracy = eval_split(opt.split, {num_images = opt.num_images})
+local loss, split_predictions, lang_stats, perplexity, accuracy = eval_split(opt.split, {num_images = opt.num_images}, fp_html)
 print(string.format('loss: %f, acc: %f, pplx: %f', loss, accuracy, perplexity))
 if lang_stats then
   print(lang_stats)
 end
+
+fp_html:close()
 
 if opt.dump_json == 1 then
   -- dump the json
