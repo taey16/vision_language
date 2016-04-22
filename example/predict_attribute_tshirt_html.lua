@@ -1,4 +1,5 @@
 require 'torch'
+require 'hdf5'
 require 'nn'
 require 'nngraph'
 require 'cutorch'
@@ -17,22 +18,14 @@ local sample_opts = agent.sample_opts
 agent_filename = string.split(agent_filename, '/')
 local input_list_path = '/storage/attribute'
 local input_list =
-  '/storage/attribute/PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_shoes_bags_swimwears.csv'
-  -- left 490000
-  --'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from500000.csv'
-  -- first 500000
-  --'PBrain_tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_from0.csv'
-  --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_knit_seed123_limit300000.csv'
-  --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit99501_300000.csv'
-  --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit75000_300000.csv'
-  --'/storage/attribute/PBrain_11st_julia_tshirts_shirts_blous_seed123_limit300000.csv'
+  '/storage/attribute/PBrain_all.csv'
 local output_dic_filename = string.format(
-  '%s.image_sentence.txt', input_list
-  --'%s.%s.txt', input_list, agent_filename[#agent_filename]
-  --'11st_julia_tshirts_shirtstes_blous_knit_sentences.%s.txt', agent_filename[#agent_filename]
-  --'11st_julia_tshirts_shirtstes_blous_sentences_from99502.%s.txt', agent_filename[#agent_filename]
-  --'11st_julia_tshirts_shirtstes_blous_sentences_from75001.%s.txt', agent_filename[#agent_filename]
-  --'11st_julia_tshirts_shirtstes_blous_sentences.%s.txt', agent_filename[#agent_filename]
+  --'%s.image_sentence.txt', input_list
+  '%s.feature.txt', input_list
+)
+local output_h5_filename = string.format(
+  --'%s.image_sentence.txt', input_list
+  '%s.feature.h5', input_list
 )
 local outfile_dic = io.open(paths.concat(input_list_path, output_dic_filename), 'w')
 local output_html_filename = 
@@ -45,13 +38,19 @@ local url_list = demon_utils.load_list(paths.concat(input_list_path, input_list)
 local fp_html = io.open(output_html_filename, 'w')
 fp_html:write("<html>\n  <head>\n    <table>\n      <tr>\n")
 
+local feature_vector = torch.FloatTensor(10000, 2048):fill(-1)
+local urls = {}
+local it = 1
 for iter, url in pairs(url_list) do
   local image_url = string.format('http://i.011st.com/%s', url)
   local image_file= demon_utils.download_image(image_url)
   io.flush(print(iter .. ' ' .. image_url))
 
-  local sents, probs = agent.get_attribute(image_file)
+  local sents, probs, feature = agent.get_attribute(image_file)
   if sents then
+    feature_vector[{{it},{}}] = feature:float():squeeze()
+    table.insert(urls, image_url)
+    it = it + 1 
     outfile_dic:write(string.format('%s,%s\n', image_url, sents[1]))
     --print(sents[1])
     os.execute(('rm -f %s'):format(image_file))
@@ -62,6 +61,13 @@ for iter, url in pairs(url_list) do
     fp_html:write("      </td>\n")
     if iter % 5 == 0 then
       fp_html:write("    </tr>\n<tr>\n")
+    end
+
+    if it % 10000 == 0 then
+      local output_h5_fp = hdf5.open(output_h5_filename, 'w')
+      output_h5_fp:write('feature', feature_vector)
+      --output_h5_fp:write('urls', urls)
+      output_h5_fp:close()
     end
   end
 end
