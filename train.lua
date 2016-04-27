@@ -133,6 +133,8 @@ local function eval_split(split, evalopt)
   local verbose = utils.getopt(evalopt, 'verbose', true)
   local val_images_use = utils.getopt(evalopt, 'val_images_use', true)
   local bn_rnn = utils.getopt(evalopt, 'use_bn')
+  local opt_iter = utils.getopt(evalopt, 'iter')
+  local checkpoint_path = utils.getopt(evalopt, 'checkpoint_path')
 
   protos.cnn:evaluate()
   -- it doesnt seemd to work when using BN-LSTM
@@ -211,6 +213,9 @@ local function eval_split(split, evalopt)
   local lang_stats
   if opt.language_eval == 1 then
     lang_stats = net_utils.language_eval(predictions, opt.id)
+  end
+  if opt.tsne == 1 then
+    net_utils.tsne_embedding(thin_lm.lookup_table, vocab, opt_iter, checkpoint_path)
   end
 
   return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
@@ -361,6 +366,9 @@ while true do
   local elapsed_trn = tm:time().real - start_trn
   local epoch = iter * 1.0 / number_of_batches
   if iter % opt.display == 0 then
+    --local embedding_weight = protos.lm.lookup_table.weight:float():clone()
+    --print(embedding_weight[{{10},{1,5}}])
+    --print(embedding_weight[{{20},{1,5}}])
     io.flush(print(string.format(
       '%d/%d: %.2f, loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
       iter, number_of_batches, epoch,
@@ -381,7 +389,7 @@ while true do
     local start_tst = tm:time().real
     -- evaluate the validation performance
     local val_loss, val_predictions, lang_stats, perplexity, val_accuracy = 
-      eval_split('val', {val_images_use = opt.val_images_use, use_bn = opt.use_bn})
+      eval_split('val', {val_images_use = opt.val_images_use, use_bn = opt.use_bn, iter = iter, checkpoint_path = opt.checkpoint_path})
     local elapsed_tst = tm:time().real
     io.flush( print(string.format(
         'validation loss: %f, perplexity: %f, accuracy: %f', val_loss, perplexity, val_accuracy

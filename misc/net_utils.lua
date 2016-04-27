@@ -232,6 +232,54 @@ function net_utils.language_eval(predictions, id)
   return result_struct
 end
 
+
+function net_utils.tsne_embedding(nn_embedding, vocab, opt_iter, checkpoint_path)
+  local embedding_weight = nn_embedding.weight:float()
+  local num_words = embedding_weight:size(1)
+  local embedding_size = embedding_weight:size(2)
+  local embedding_input = torch.FloatTensor(1, num_words)
+  embedding_input[1] = torch.range(1, num_words)
+  local embedding_output= nn_embedding:forward(embedding_input:cuda()):squeeze()
+
+  local word_vectors = {}
+  for word_idx, word in pairs(vocab) do
+    word_vectors[word] = embedding_output[{{tonumber(word_idx)},{}}]:squeeze()
+    local norm = word_vectors[word]:norm()
+    if norm > 0 then
+      word_vectors[word]:div(norm)
+    end
+  end
+  function tsne(vec, num_words, embedding_size)
+    local manifold = require 'manifold'  
+    print('num_words: ' .. num_words)
+    print('embedding_size: ' .. embedding_size)
+    torch.setdefaulttensortype('torch.DoubleTensor')
+    local tsne_input = torch.zeros(num_words, embedding_size)
+    local iter = 1
+    local words = {}
+    for key, val in pairs(vec) do
+      tsne_input[iter]:copy(vec[key])
+      words[iter] = key
+      iter = iter + 1
+    end
+    tsne_opts = {ndims = 2, perplexity = 50, pca = 64, use_bh = false}
+    local tsne_output = manifold.embedding.tsne(tsne_input, tsne_opts)
+    return tsne_output, words
+  end
+
+  local tsne_output, words = tsne(word_vectors, num_words, embedding_size)
+
+  local output_filename = string.format('%s/tsne_%08d.log', checkpoint_path, opt_iter)
+  local fp = io.open(output_filename, 'w')
+  for i=1, #words do
+	  fp:write(words[i] .. ' ' .. tsne_output[i][1]  .. ' ' .. tsne_output[i][2] .. '\n')
+  end
+  fp:close()
+  print('tsne_embedding complete in ' .. output_filename)
+  io.flush()
+  torch.setdefaulttensortype('torch.FloatTensor')
+end
+
 return net_utils
 
 

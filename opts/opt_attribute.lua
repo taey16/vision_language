@@ -47,13 +47,13 @@ local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
-local gpus = {1,2}
+local gpus = {1,2,3,4}
 local retrain_iter = 
   0
 local start_from = 
   ''
 local experiment_id = string.format(
-  'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
+  'tsne_resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
   --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
@@ -158,7 +158,7 @@ cmd:option('-train_samples', total_samples_train - total_samples_valid - total_s
   '# of samples in training set')
 cmd:option('-val_images_use', total_samples_valid,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
-cmd:option('-test_images_use', total_samples_test,
+cmd:option('-test_images_use',total_samples_test,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
 cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size), 
   'how often to save a model checkpoint?')
@@ -166,6 +166,7 @@ cmd:option('-checkpoint_path', checkpoint_path,
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 0, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
+cmd:option('-tsne', 1, 'Save word-embedding vector using tsne')
 
 -- misc
 cmd:option('-gpus', gpus, '# of gpus for cnn')
