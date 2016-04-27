@@ -31,11 +31,15 @@ local embedding_weight = model.lm.lookup_table.weight:float()
 local num_words = embedding_weight:size(1)
 local embedding_size = embedding_weight:size(2)
 print(vocab)
---print(word_vector)
+
+local embedding_input = torch.FloatTensor(1, num_words)
+embedding_input[1] = torch.range(1, num_words)
+local embedding_output = model.lm.lookup_table:forward(embedding_input:cuda()):squeeze()
+print(embedding_output:size())
 
 local word_vector = {}
 for i, val in pairs(vocab) do
-  word_vector[val] = embedding_weight[{{tonumber(i)}, {}}][1]:squeeze()
+  word_vector[val] = embedding_output[{{tonumber(i)}, {}}]:squeeze()
 end
 
 

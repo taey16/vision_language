@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 log_filename = \
@@ -9,17 +10,17 @@ log_filename = \
 
 f = file('%s/tsne.txt' % log_filename, 'r').read().split('\n')
 
-
 matplotlib.rc('font',family='AppleGothic')
 plt.figure(figsize=(16,16));
 datax = []
 datay = []
 for line in f[:-1]:
-  label, x, y = line.split()
+  label, x, y = line.split(' ')
   x = float(x)
   y = float(y)
   datax.append(x)
   datay.append(y)
+  print('x: %f, y: %f' % (x, y))
   plt.annotate(label.decode('utf-8'), xy = (x, y), xytext = (0, 0), textcoords = 'offset points')
 
 plt.scatter(datax, datay, color='white');
