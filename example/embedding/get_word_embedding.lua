@@ -42,7 +42,6 @@ for i, val in pairs(vocab) do
   word_vector[val] = embedding_output[{{tonumber(i)}, {}}]:squeeze()
 end
 
-
 --normalize
 for i, val in pairs(word_vector) do
 	local norm = word_vector[i]:norm()

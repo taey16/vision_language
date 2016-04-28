@@ -239,6 +239,7 @@ function net_utils.tsne_embedding(nn_embedding, vocab, opt_iter, checkpoint_path
   local embedding_size = embedding_weight:size(2)
   local embedding_input = torch.FloatTensor(1, num_words)
   embedding_input[1] = torch.range(1, num_words)
+
   local embedding_output= nn_embedding:forward(embedding_input:cuda()):squeeze()
 
   local word_vectors = {}
@@ -251,12 +252,14 @@ function net_utils.tsne_embedding(nn_embedding, vocab, opt_iter, checkpoint_path
   end
   function tsne(vec, num_words, embedding_size)
     local manifold = require 'manifold'  
+    print('Start to tsne embedding ...')
     print('num_words: ' .. num_words)
     print('embedding_size: ' .. embedding_size)
     torch.setdefaulttensortype('torch.DoubleTensor')
     local tsne_input = torch.zeros(num_words, embedding_size)
     local iter = 1
     local words = {}
+    -- vec: {'word0': vector, 'word1'= vector, 'word2' = vector}
     for key, val in pairs(vec) do
       tsne_input[iter]:copy(vec[key])
       words[iter] = key
@@ -275,11 +278,10 @@ function net_utils.tsne_embedding(nn_embedding, vocab, opt_iter, checkpoint_path
 	  fp:write(words[i] .. ' ' .. tsne_output[i][1]  .. ' ' .. tsne_output[i][2] .. '\n')
   end
   fp:close()
-  print('tsne_embedding complete in ' .. output_filename)
+  print('End of tsne embedding in ' .. output_filename)
   io.flush()
   torch.setdefaulttensortype('torch.FloatTensor')
 end
 
 return net_utils
-
 
