@@ -102,6 +102,9 @@ protos.expander = nn.FeatExpander(opt.seq_per_img)
 protos.crit = nn.LanguageModelCriterion()
 protos.lm:createClones()
 for k,v in pairs(protos) do v:cuda() end
+
+protos.cnn = paths.dofile('/works/image-encoder/utils/BN-absorber.lua')(protos.cnn)
+
 protos.cnn:evaluate()
 protos.lm:evaluate()
 
