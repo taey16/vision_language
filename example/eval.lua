@@ -107,6 +107,7 @@ protos.cnn = paths.dofile('/works/image-encoder/utils/BN-absorber.lua')(protos.c
 
 protos.cnn:evaluate()
 protos.lm:evaluate()
+collectgarbage()
 
 
 local function eval_split(split, evalopt, fp_html)
