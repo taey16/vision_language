@@ -98,11 +98,11 @@ function tsne(vec)
     --print(string.format('symbol: %s, vec[1] = %f', symbols[i], m[i][1]))
     i = i + 1
 	end
-  tsne_opts = {ndims = 2, perplexity = 50, pca = 64, use_bh = false}
+  tsne_opts = {ndims = 2, perplexity = 50, pca = 256, use_bh = false}
+  --tsne_opts = {ndims = 2, perplexity = 50, use_bh = false}
   mapped_x1 = manifold.embedding.tsne(m, tsne_opts)
   return mapped_x1, symbols
 end
-
 
 tsne, symbols = tsne(word_vector)
 
