@@ -1,6 +1,6 @@
 
-local input_h5 = '/storage/coco/data_342.h5'
-local input_json = '/storage/coco/data_342.json'
+local input_h5 = '/data2/coco/data_342.h5'
+local input_json = '/data2/coco/data_342.json'
 local total_samples_train = 123287
 local total_samples_valid = 3200
 local dataset_name = 'coco'
@@ -19,11 +19,11 @@ local rnn_size = 384
 local num_rnn_layers = 3
 local seq_length = -1
 local input_encoding_size = 2048
-local use_bn = 'bn'--'original'
+local use_bn = 'original'
 local init_gamma = 0.1
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.0--0.5
+local drop_prob_lm = 0.5
 
 local batch_size = 16
 local optimizer = 'adam'
@@ -42,7 +42,7 @@ local retrain_iter = 0
 local start_from = 
   ''
 local experiment_id = string.format(
-  'inception-v3-2015-12-05_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
+  'inception-v3-2015-12-05_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
   --'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
   batch_size, 
@@ -154,6 +154,7 @@ cmd:option('-checkpoint_path', checkpoint_path,
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 1, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
+cmd:option('-tsne', 1, 'Save word-embedding vector using tsne')
 
 -- misc
 cmd:option('-gpus', gpus, '# of gpus for cnn')
