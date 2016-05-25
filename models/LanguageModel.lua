@@ -141,6 +141,58 @@ function layer:evaluate()
 end
 
 
+function layer:guided_sample(imgs, opt, guide_parient, guide_category)
+  local sample_max = utils.getopt(opt, 'sample_max', 1)
+  local beam_size = utils.getopt(opt, 'beam_size', 1)
+  local temperature = utils.getopt(opt, 'temperature', 1.0)
+
+  local batch_size = imgs:size(1)
+  self:_createInitState(batch_size)
+  local state = self.init_state
+
+  local seq = torch.LongTensor(self.seq_length, batch_size):zero()
+  local seqLogprobs = torch.FloatTensor(self.seq_length, batch_size)
+  local logprobs
+  for t=1,self.seq_length+2 do
+
+    local xt, it, sampleLogprobs
+    if t == 1 then
+      xt = imgs
+    elseif t == 2 then
+      it = torch.LongTensor(batch_size):fill(self.vocab_size+1)
+      xt = self.lookup_table:forward(it)
+    elseif t == 3 then
+      sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+      it = torch.LongTensor(batch_size):fill(guide_parient)
+      it = it:view(-1):long()
+      xt = self.lookup_table:forward(it)
+    elseif t == 4 then
+      sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+      it = torch.LongTensor(batch_size):fill(guide_category)
+      it = it:view(-1):long()
+      xt = self.lookup_table:forward(it)
+    else
+      sampleLogprobs, it = torch.max(logprobs, 2)
+      it = it:view(-1):long()
+      xt = self.lookup_table:forward(it)
+    end
+
+    if t >= 3 then 
+      seq[t-2] = it
+      seqLogprobs[t-2] = sampleLogprobs:view(-1):float()
+    end
+
+    local inputs = {xt,unpack(state)}
+    local out = self.core:forward(inputs)
+    logprobs = out[self.num_state+1]
+    state = {}
+    for i=1,self.num_state do table.insert(state, out[i]) end
+  end
+
+  return seq, seqLogprobs
+end
+
+
 --[[
 takes a batch of images and runs the model forward in sampling mode
 Careful: make sure model is in :evaluate() mode if you're calling this.
@@ -201,7 +253,9 @@ function layer:sample(imgs, opt)
     end
 
     if t >= 3 then 
-      seq[t-2] = it -- record the samples
+      -- record the samples
+      -- the resion t-2 is that t==0 for image_feature and t==1 for start-token
+      seq[t-2] = it
       seqLogprobs[t-2] = sampleLogprobs:view(-1):float() -- and also their log likelihoods
     end
 
