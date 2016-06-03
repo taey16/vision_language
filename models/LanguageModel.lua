@@ -162,13 +162,22 @@ function layer:guided_sample(imgs, opt, guide_parient, guide_category)
       it = torch.LongTensor(batch_size):fill(self.vocab_size+1)
       xt = self.lookup_table:forward(it)
     elseif t == 3 then
-      sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
-      it = torch.LongTensor(batch_size):fill(guide_parient)
+      if guide_parient ~= 0 then
+        sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+        it = torch.LongTensor(batch_size):fill(guide_parient)
+      else
+        sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+        it = torch.LongTensor(batch_size):fill(guide_category)
+      end
       it = it:view(-1):long()
       xt = self.lookup_table:forward(it)
     elseif t == 4 then
-      sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
-      it = torch.LongTensor(batch_size):fill(guide_category)
+      if guide_parient ~= 0 then
+        sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+        it = torch.LongTensor(batch_size):fill(guide_category)
+      else
+        sampleLogprobs, it = torch.max(logprobs, 2)
+      end
       it = it:view(-1):long()
       xt = self.lookup_table:forward(it)
     else
