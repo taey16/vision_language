@@ -141,7 +141,7 @@ function layer:evaluate()
 end
 
 
-function layer:guided_sample(imgs, opt, guide_parient, guide_category)
+function layer:guided_sample(imgs, opt, guide_parient, guide_category, guide_gender)
   local sample_max = utils.getopt(opt, 'sample_max', 1)
   local beam_size = utils.getopt(opt, 'beam_size', 1)
   local temperature = utils.getopt(opt, 'temperature', 1.0)
@@ -175,6 +175,17 @@ function layer:guided_sample(imgs, opt, guide_parient, guide_category)
       if guide_parient ~= 0 then
         sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
         it = torch.LongTensor(batch_size):fill(guide_category)
+      else
+        --sampleLogprobs, it = torch.max(logprobs, 2)
+        sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+        it = torch.LongTensor(batch_size):fill(guide_gender)
+      end
+      it = it:view(-1):long()
+      xt = self.lookup_table:forward(it)
+    elseif t == 5 then
+      if guide_parient ~= 0 then
+        sampleLogprobs = torch.FloatTensor(batch_size):fill(0.00000001)
+        it = torch.LongTensor(batch_size):fill(guide_gender)
       else
         sampleLogprobs, it = torch.max(logprobs, 2)
       end
