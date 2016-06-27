@@ -99,7 +99,7 @@ assert(cnn_params:nElement() == cnn_grad_params:nElement(),
 -- modules. These thin module will have no intermediates and will be used
 -- for checkpointing to write significantly smaller checkpoint files
 local thin_lm = protos.lm:clone()
-thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std')
+thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std', 'running_var')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 local thin_cnn
 if #opt.gpus > 1 then
