@@ -36,13 +36,16 @@ local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001--0.0000001
 
 local gpus = {1,2}
+local embedding_model =
+  nil
 local retrain_iter = 0 
 local start_from = 
   ''
 local experiment_id = string.format(
-  'inception-v3-2015-12-05_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
+  'inception-v3-2015-12-05_embed_%s_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
   --'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
+  tostring(embedding_model),
   batch_size, 
   flip_jitter, crop_jitter, 
   use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
@@ -79,6 +82,8 @@ cmd:option('-crop_jitter', crop_jitter,
   'flag for flipping [true | false]')
 cmd:option('-flip_jitter', flip_jitter,
   'flag for flipping [true | false]')
+cmd:option('-embedding_model', embedding_model, 
+  'path to a model checkpoint to initialize embedding weights from. Empty = don\'t')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 cmd:option('-retrain_iter', retrain_iter, 

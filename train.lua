@@ -31,6 +31,16 @@ if string.len(opt.start_from) > 0 then
   protos = loaded_checkpoint.protos
   net_utils.unsanitize_gradients(protos.cnn)
   local lm_modules = protos.lm:getModulesList()
+  if opt.embedding_model or opt.embedding_model ~= '' then
+    local embedding_checkpoint = torch.load(opt.embedding_model)
+    local protos_embedding = embedding_checkpoint.protos.lm
+    if lm_modules.lookup_table.weight then
+      lm_modules.lookup_table.weight:copy(protos_embedding.lookup_table.weight)
+    end
+    if lm_modules.lookup_table.bias then
+      lm_modules.lookup_table.bias:copy(protos_embedding.lookup_table.bias)
+    end
+  end
   for k,v in pairs(lm_modules) do 
     net_utils.unsanitize_gradients(v) 
   end
