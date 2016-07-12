@@ -15,8 +15,8 @@ require 'models.FeatExpander'
 require 'optim'
 
 
-opt = paths.dofile('opts/opt_attribute.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
+--opt = paths.dofile('opts/opt_attribute.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3-default.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
@@ -63,7 +63,7 @@ else
   lmOpt.rnn_activation = opt.rnn_activation
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
-  if opt.embedding_model or opt.embedding_model ~= '' then
+  if opt.embedding_model and opt.embedding_model ~= '' then
     local embedding_checkpoint = torch.load(opt.embedding_model)
     local protos_embedding = embedding_checkpoint.protos.lm
     if protos.lm.lookup_table.weight then
