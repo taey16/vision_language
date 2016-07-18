@@ -6,7 +6,8 @@ local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/model/inception-v3-2015-12-05/inception-v3-2015-12-05.cudnn-v4.t7'
+  --'/storage/ImageNet/ILSVRC2012/model/inception-v3-2015-12-05/inception-v3-2015-12-05.cudnn-v4.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/ILSVRC2012_X_gpu2_cudnn-v5_resception_epoch7_nag_lr0.04500_decay_seed0.940_start0_every80074_iter240220/model_177.t7'
   --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
 local image_size = 342
 local crop_size = 299
@@ -25,19 +26,19 @@ local drop_prob_lm = 0.5
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 0.001
+local learning_rate = 0.0004
 local alpha = 0.9
 local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start= 300000
 local learning_rate_decay_every= 50000
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 0.001
-local cnn_weight_decay = 0.00001--0.0000001
+local cnn_learning_rate = 0.0004
+local cnn_weight_decay = 0.0000001
 
 local gpus = {1,2}
 local embedding_model =
-  nil
+  ''
 local retrain_iter = 0 
 local start_from = 
   ''
@@ -157,7 +158,7 @@ cmd:option('-checkpoint_path', checkpoint_path,
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 1, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
-cmd:option('-tsne', 1, 'Save word-embedding vector using tsne')
+cmd:option('-tsne', 0, 'Save word-embedding vector using tsne')
 
 -- misc
 cmd:option('-gpus', gpus, '# of gpus for cnn')
