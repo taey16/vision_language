@@ -15,7 +15,6 @@ require 'models.FeatExpander'
 require 'optim'
 
 
---opt = paths.dofile('opts/opt_attribute.lua')
 local opt = paths.dofile('opts/opt_coco_inception-v3-default.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
