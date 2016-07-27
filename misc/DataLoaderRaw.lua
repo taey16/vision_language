@@ -67,8 +67,9 @@ end
 --]]
 function DataLoaderRaw:getBatch(opt)
   local batch_size = utils.getopt(opt, 'batch_size', 5) -- how many images get returned at one time (to go through CNN)
+  local image_size = utils.getopt(opt, 'image_size', 342)
   -- pick an index of the datapoint to load next
-  local img_batch_raw = torch.ByteTensor(batch_size, 3, 256, 256)
+  local img_batch_raw = torch.ByteTensor(batch_size, 3, image_size, image_size)
   local max_index = self.N
   local wrapped = false
   local infos = {}
@@ -80,7 +81,7 @@ function DataLoaderRaw:getBatch(opt)
 
     -- load the image
     local img = image.load(self.files[ri], 3, 'byte')
-    img_batch_raw[i] = image.scale(img, 256, 256)
+    img_batch_raw[i] = image.scale(img, image_size, image_size)
 
     -- and record associated info as well
     local info_struct = {}
