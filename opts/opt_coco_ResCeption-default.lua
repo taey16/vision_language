@@ -1,12 +1,12 @@
 
-local input_h5 = '/data2/coco/data_342_val8000_test0.h5'
-local input_json = '/data2/coco/data_342_val8000_test0.json'
+local input_h5 = '/data2/coco/data_342.h5'
+local input_json = '/data2/coco/data_342.json'
 local total_samples_train = 123287
-local total_samples_valid = 8000
+local total_samples_valid = 3200
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/data2/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_31.t7'
+  '/storage/coco/checkpoints/coco_123287_3200_seq_length-1/inception-v3-2015-12-05_embed__bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid384_lay3_drop5.000000e-01_adam_lr4.000000e-04_seed0.50_start300000_every50000_finetune0_cnnlr4.000000e-04_cnnwc1.000000e-07_tsne/model_199.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
@@ -32,7 +32,7 @@ local learning_rate_decay_every= 50000
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.0004
-local cnn_weight_decay = 0.000001
+local cnn_weight_decay = 0.0000001
 
 local gpus = {1,2}
 local embedding_model =
@@ -41,7 +41,7 @@ local retrain_iter = 0
 local start_from = 
   ''
 local experiment_id = string.format(
-  'inception-v3_embed_%s_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
+  'ResCeption_embed_%s_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
   tostring(embedding_model),
   batch_size, 
   flip_jitter, crop_jitter, 
