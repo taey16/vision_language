@@ -90,11 +90,11 @@ end
 
 function layer:createClones()
   -- construct the net clones
-  print('constructing clones inside the LanguageModel, (weight, bias, gradWeight, gradBias, running_mean, running_std)')
+  print('constructing clones inside the LanguageModel, (weight, bias, gradWeight, gradBias, running_mean, running_std, running_var)')
   self.clones = {self.core}
   self.lookup_tables = {self.lookup_table}
   for t=2,self.seq_length+2 do
-    self.clones[t] = self.core:clone('weight', 'bias', 'gradWeight', 'gradBias', 'running_mean', 'running_std')
+    self.clones[t] = self.core:clone('weight', 'bias', 'gradWeight', 'gradBias', 'running_mean', 'running_std', 'running_var')
     --self.clones[t] = self.core:clone('weight', 'bias', 'gradWeight', 'gradBias')
     self.lookup_tables[t] = self.lookup_table:clone('weight', 'gradWeight')
   end

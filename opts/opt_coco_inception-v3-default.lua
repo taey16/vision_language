@@ -1,13 +1,12 @@
 
-local input_h5 = '/data2/coco/data_342.h5'
-local input_json = '/data2/coco/data_342.json'
+local input_h5 = '/data2/coco/data_342_val8000_test0.h5'
+local input_json = '/data2/coco/data_342_val8000_test0.json'
 local total_samples_train = 123287
-local total_samples_valid = 3200
+local total_samples_valid = 8000
 local dataset_name = 'coco'
 
 local torch_model= 
-  '/storage/ImageNet/ILSVRC2012/model/inception-v3-2015-12-05/inception-v3-2015-12-05.cudnn-v4.t7'
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
+  '/data2/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_31.t7'
 local image_size = 342
 local crop_size = 299
 local crop_jitter = true
@@ -25,24 +24,25 @@ local drop_prob_lm = 0.5
 
 local batch_size = 16
 local optimizer = 'adam'
-local learning_rate = 0.001
+local learning_rate = 0.0004
 local alpha = 0.9
 local learning_rate_decay_seed = 0.5
 local learning_rate_decay_start= 300000
 local learning_rate_decay_every= 50000
 local finetune_cnn_after = 0
 local cnn_optimizer = 'nag'
-local cnn_learning_rate = 0.001
-local cnn_weight_decay = 0.00001--0.0000001
+local cnn_learning_rate = 0.0004
+local cnn_weight_decay = 0.000001
 
 local gpus = {1,2}
+local embedding_model =
+  ''
 local retrain_iter = 0 
 local start_from = 
   ''
 local experiment_id = string.format(
-  'inception-v3-2015-12-05_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
-  --'resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
-  --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_start%d_seed%f_every%d_finetune%d_cnnlr%f_cnnwc%e', 
+  'inception-v3_embed_%s_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_tsne', 
+  tostring(embedding_model),
   batch_size, 
   flip_jitter, crop_jitter, 
   use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
@@ -79,6 +79,8 @@ cmd:option('-crop_jitter', crop_jitter,
   'flag for flipping [true | false]')
 cmd:option('-flip_jitter', flip_jitter,
   'flag for flipping [true | false]')
+cmd:option('-embedding_model', embedding_model, 
+  'path to a model checkpoint to initialize embedding weights from. Empty = don\'t')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 cmd:option('-retrain_iter', retrain_iter, 
@@ -152,7 +154,7 @@ cmd:option('-checkpoint_path', checkpoint_path,
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 1, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
-cmd:option('-tsne', 1, 'Save word-embedding vector using tsne')
+cmd:option('-tsne', 0, 'Save word-embedding vector using tsne')
 
 -- misc
 cmd:option('-gpus', gpus, '# of gpus for cnn')

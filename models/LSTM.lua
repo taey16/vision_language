@@ -32,9 +32,9 @@ function LSTM.bn_lstm(input_size, output_size, rnn_size, num_layer, dropout)
       input_size_L = rnn_size
     end
 
-    local bn_wx = cudnn.BatchNormalization(4 * rnn_size, 1e-5, 0.1, true)
-    local bn_wh = cudnn.BatchNormalization(4 * rnn_size, 1e-5, 0.1, true)
-    local bn_c  = cudnn.BatchNormalization(    rnn_size, 1e-5, 0.1, true)
+    local bn_wx = nn.BatchNormalization(4 * rnn_size, 1e-5, 0.1, true)
+    local bn_wh = nn.BatchNormalization(4 * rnn_size, 1e-5, 0.1, true)
+    local bn_c  = nn.BatchNormalization(    rnn_size, 1e-5, 0.1, true)
 
     local i2h = bn_wx(nn.Linear(input_size_L,4 * rnn_size)(x):annotate { name = 'i2h_' .. L }):annotate { name = 'bn_wx_' .. L }
     local h2h = bn_wh(nn.Linear(rnn_size,    4 * rnn_size, false)(prev_h):annotate { name = 'h2h_' .. L }):annotate { name = 'bn_wh_' .. L }

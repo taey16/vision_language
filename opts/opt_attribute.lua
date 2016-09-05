@@ -50,10 +50,12 @@ local cnn_weight_decay = 0.00001
 local gpus = {1,2,3,4}
 local retrain_iter = 
   0
+local embedding_model = 
+  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra_801544_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.90_start541152_every45096_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.90_start541152_every45096_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0.t7'
 local start_from = 
   ''
 local experiment_id = string.format(
-  'tsne_resception_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
+  'tsne_resception_embedding_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
   --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
   --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
   batch_size, 
@@ -91,6 +93,8 @@ cmd:option('-crop_jitter', crop_jitter,
   'flag for flipping [false | true ]')
 cmd:option('-flip_jitter', flip_jitter, 
   'flag for flipping [false | true ]')
+cmd:option('-embedding_model', embedding_model, 
+  'path to a model checkpoint to initialize embedding weights from. Empty = don\'t')
 cmd:option('-start_from', start_from, 
   'path to a model checkpoint to initialize model weights from. Empty = don\'t')
 cmd:option('-retrain_iter', retrain_iter, 

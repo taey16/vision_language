@@ -15,8 +15,8 @@ require 'models.FeatExpander'
 require 'optim'
 
 
-opt = paths.dofile('opts/opt_attribute.lua')
---local opt = paths.dofile('opts/opt_coco_inception-v3.lua')
+--opt = paths.dofile('opts/opt_attribute.lua')
+local opt = paths.dofile('opts/opt_coco_inception-v3-default.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
@@ -63,6 +63,18 @@ else
   lmOpt.rnn_activation = opt.rnn_activation
   lmOpt.rnn_type = opt.rnn_type
   protos.lm = nn.LanguageModel(lmOpt)
+  if opt.embedding_model and opt.embedding_model ~= '' then
+    local embedding_checkpoint = torch.load(opt.embedding_model)
+    local protos_embedding = embedding_checkpoint.protos.lm
+    if protos.lm.lookup_table.weight then
+      io.flush(print('initializing embedding weights from '.. opt.embedding_model))
+      protos.lm.lookup_table.weight:copy(protos_embedding.lookup_table.weight)
+    end
+    if protos.lm.lookup_table.bias then
+      io.flush(print('initializing embedding bias from '.. opt.embedding_model))
+      protos.lm.lookup_table.bias:copy(protos_embedding.lookup_table.bias)
+    end
+  end
   -- initialize the pretrained ConvNet
   protos.cnn = net_utils.build_cnn(
     {encoding_size = opt.input_encoding_size, model_filename = opt.torch_model}
@@ -99,7 +111,7 @@ assert(cnn_params:nElement() == cnn_grad_params:nElement(),
 -- modules. These thin module will have no intermediates and will be used
 -- for checkpointing to write significantly smaller checkpoint files
 local thin_lm = protos.lm:clone()
-thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std')
+thin_lm.core:share(protos.lm.core, 'weight', 'bias', 'running_mean', 'running_std', 'running_var')
 thin_lm.lookup_table:share(protos.lm.lookup_table, 'weight', 'bias')
 local thin_cnn
 if #opt.gpus > 1 then

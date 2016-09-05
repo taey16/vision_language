@@ -21,7 +21,7 @@ net_utils.cnn_model_std =
 function net_utils.build_cnn(opt)
   local model_filename = utils.getopt(opt, 'model_filename')
   local encoding_size = utils.getopt(opt, 'encoding_size')
-  local vision_encoder = torch.load(model_filename)
+  local vision_encoder = torch.load(model_filename):get(1)
   vision_encoder.modules[#vision_encoder] = nil
   vision_encoder.modules[#vision_encoder] = nil
   --[[
