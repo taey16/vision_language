@@ -29,21 +29,40 @@ function layer:__init(opt)
   -- create the core rnn network. note +1 for both the START and END tokens
   if self.rnn_type == 'lstm' then
     if self.use_bn == 'bn' then
-      self.core = LSTM.bn_lstm(
-        self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+      self.core = LSTM.bn_lstm(self.input_encoding_size, 
+                               self.vocab_size+1, 
+                               self.rnn_size, 
+                               self.num_layers, 
+                               dropout, 
+                               self.activation)
     else
-      self.core = LSTM.lstm(
-        self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+      self.core = LSTM.lstm(self.input_encoding_size, 
+                            self.vocab_size+1, 
+                            self.rnn_size, 
+                            self.num_layers, 
+                            dropout, 
+                            self.activation)
     end
   elseif self.rnn_type == 'gru' then
-    self.core = GRU.gru(
-      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout)
+    self.core = GRU.gru(self.input_encoding_size, 
+                        self.vocab_size+1, 
+                        self.rnn_size, 
+                        self.num_layers, 
+                        dropout)
   elseif self.rnn_type == 'rnn' then
-    self.core = RNN.rnn(
-      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    self.core = RNN.rnn(self.input_encoding_size, 
+                        self.vocab_size+1, 
+                        self.rnn_size, 
+                        self.num_layers, 
+                        dropout, 
+                        self.activation)
   elseif self.rnn_type == 'scrnn' then
-    self.core = SCRNN.scrnn(
-      self.input_encoding_size, self.vocab_size+1, self.rnn_size, self.num_layers, dropout, self.activation)
+    self.core = SCRNN.scrnn(self.input_encoding_size, 
+                            self.vocab_size+1, 
+                            self.rnn_size, 
+                            self.num_layers, 
+                            dropout, 
+                            self.activation)
   else
     io.flush(error(string.format(
       'Correct rnn_type: %s', self.rnn_type)))
@@ -81,8 +100,7 @@ function layer:_createInitState(batch_size)
       end
     end
   else
-    error(string.format(
-      'Correct rnn_type: %s', self.rnn_type))
+    error(string.format('Correct rnn_type: %s', self.rnn_type))
   end
   self.num_state = #self.init_state
 end
@@ -590,7 +608,9 @@ function crit:updateGradInput(input, seq)
 end
 
 
-function crit:accuracy(input, seq)
+function crit:precision(input, seq)
+  --input: predicted sentence (word sequence)
+  --seq: ground-truth sequence of fword ids
   local L,N,Mp1 = input:size(1), input:size(2), input:size(3)
   local D = seq:size(1)
   assert(D == L-2, 'input Tensor should be 2 larger in time')
@@ -599,7 +619,7 @@ function crit:accuracy(input, seq)
   local hit_count = torch.FloatTensor(D+1):fill(0)
   --local hit_count = torch.FloatTensor(D):fill(0)
   local perplexity = 0
-  local accuracy = 0
+  local precision = 0
   local n = 0
   for b=1,N do -- iterate over batches
     local first_time = true
@@ -616,11 +636,13 @@ function crit:accuracy(input, seq)
         target_index = Mp1
         first_time = false
       end
-      -- if there is a non-null next token, enforce accuracy
+
+      -- if there is a non-null next token, enforce precision
       if target_index ~= 0 then
         local output_cpu = input[{t,b,{}}]:float():exp()
         local prob, predicted_word_label
         prob, predicted_word_label = output_cpu:max(1)
+        if predicted_word_label[1] == Mp1 then break end
         if predicted_word_label[1] == target_index then
           -- accumulate 
           hit_count[t-1] = hit_count[t-1] + 1
@@ -631,8 +653,8 @@ function crit:accuracy(input, seq)
     n = n + 1
   end
   -- nomalize by number of predictions that were made
-  accuracy = hit_count:div(n)
+  precision = hit_count:div(n)
   perplexity = math.pow(2.0, perplexity / n )
-  return accuracy, perplexity
+  return precision, perplexity
 end
 

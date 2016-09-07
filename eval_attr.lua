@@ -58,11 +58,14 @@ cmd:option('-input_h5',
 cmd:option('-input_json',
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.json',
   'path to the json file containing additional info and vocab. empty = fetch from model checkpoint.')
+cmd:option('-output',
+  nil,
+  'path to the write prediction-gt pairs in disk')
 cmd:option('-split', 
-  'test', 
+  --'test', 
   --'val', 
+  'train',
   'if running on images, which split to use: val|test|train')
-cmd:option('-algorithm', 'ResCeption-LSTM-beam2-temp1.5', '')
 
 -- misc
 cmd:option('-seed', 123, 'random number generator seed to use')
@@ -72,6 +75,9 @@ local opt = cmd:parse(arg)
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeed(opt.seed)
+
+assert(apt.output, 'use --output')
+logger_output = io.open(opt.output, 'w')
 
 assert(string.len(opt.model) > 0, 'must provide a model')
 local checkpoint = torch.load(opt.model)
@@ -106,8 +112,7 @@ local function eval_split(split, evalopt)
   loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
-  local accuracy = 0
-  local perplexity = 0
+  local precision = 0
   local loss_evals = 0
   local predictions = {}
   while true do
@@ -136,35 +141,30 @@ local function eval_split(split, evalopt)
 
     -- evaluate loss if we have the labels
     local loss = 0
-    local acc,pplx = 0, 0
-    local acc_per_seq = 0
-    if data.labels then
-      local expanded_feats = protos.expander:forward(feats)
-      local logprobs = protos.lm:forward{expanded_feats, data.labels}
-      -- logprobs:size() --> (opt.seq_length+2, opt.batch_size, # of total words)
-      loss = protos.crit:forward(logprobs, data.labels)
-      loss_sum = loss_sum + loss
+    local prec = 0
+    local prec_per_seq = 0
+    local expanded_feats = protos.expander:forward(feats)
+    local logprobs = protos.lm:forward{expanded_feats, data.labels}
+    -- logprobs:size() --> (opt.seq_length+2, opt.batch_size, # of total words)
+    loss = protos.crit:forward(logprobs, data.labels)
+    loss_sum = loss_sum + loss
 
-      acc, pplx = protos.crit:accuracy(logprobs, data.labels)
-      for i=1,opt.seq_length do 
-      --for i=2,2 do 
-        acc_per_seq = acc_per_seq + acc[i] 
+    prec, _ = protos.crit:precision(logprobs, data.labels)
+    for i=1,opt.seq_length do 
+      if vocab[tostring(data.labels[i][1])] ~= nil then
+        prec_per_seq = prec_per_seq + prec[i] 
       end
-      --acc_per_seq = acc_per_seq / opt.seq_length
-      --avg_acc_per_seq = avg_acc_per_seq / 1
-      --accuracy = accuracy + acc[2]
-      accuracy = accuracy + acc_per_seq
-      perplexity = perplexity + pplx
-
-      loss_evals = loss_evals + 1
     end
+    loss_evals = loss_evals + 1
 
     -- forward the model to also get generated samples for each image
-    local sample_opts = { 
-      sample_max = opt.sample_max, beam_size = opt.beam_size, temperature = opt.temperature }
+    local sample_opts = {sample_max = opt.sample_max, 
+                         beam_size = opt.beam_size, 
+                         temperature = opt.temperature}
     local seq = protos.lm:sample(feats, sample_opts)
     local sents, num_words = net_utils.decode_sequence(vocab, seq)
-    acc_per_seq = (acc_per_seq-1) / num_words
+    prec_per_seq = prec_per_seq / num_words
+    precision = precision + prec_per_seq
 
     local gt_sents = ''
     for i=1,opt.seq_length do
@@ -186,19 +186,19 @@ local function eval_split(split, evalopt)
       table.insert(predictions, entry)
       if verbose then
         print(string.format('image %s: %s predicted: %s',entry.image_id, entry.file_path, entry.caption))
-        if opt.split == 'train' then
-          print(string.format('image %s: %s gt:       %s', entry.image_id, entry.file_path, entry.gt))
-        end
+        print(string.format('image %s: %s gt:       %s', entry.image_id, entry.file_path, entry.gt))
       end
+      logger_output:write(string.format('%s\t%s\n', entry.caption, entry.gt))
+      io.flush()
     end
 
     -- if we wrapped around the split or used up val imgs budget then bail
     local ix0 = data.bounds.it_pos_now
     local ix1 = math.min(data.bounds.it_max, num_images)
     if verbose then
-      print(string.format('evaluating performance... %d/%d (loss: %f, precision: %f, pplx: %f)', 
+      print(string.format('evaluating performance... %d/%d (loss: %f, precision: %f)', 
         ix0-1, ix1, 
-        loss, acc_per_seq, pplx))
+        loss, prec_per_seq))
     end
 
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
@@ -207,13 +207,14 @@ local function eval_split(split, evalopt)
 
   if n % opt.batch_size * 100 == 0 then collectgarbage() end
 
-  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
+  return loss_sum/loss_evals, 
+         predictions, 
+         precision/loss_evals
 end
 
-local loss, split_predictions, lang_stats, perplexity, accuracy = 
+local loss, split_predictions, precision = 
   eval_split(opt.split, {num_images = opt.num_images})
-print(string.format('loss: %f, acc: %f, pplx: %f', loss, accuracy, perplexity))
-if lang_stats then
-  print(lang_stats)
-end
+print(string.format('loss: %f, prec: %f', loss, precision))
 
+logger_output:close()
+print('Done')

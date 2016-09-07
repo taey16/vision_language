@@ -22,8 +22,10 @@ function net_utils.build_cnn(opt)
   local model_filename = utils.getopt(opt, 'model_filename')
   local encoding_size = utils.getopt(opt, 'encoding_size')
   local vision_encoder = torch.load(model_filename):get(1)
+  --[[
   vision_encoder.modules[#vision_encoder] = nil
   vision_encoder.modules[#vision_encoder] = nil
+  --]]
   --[[
   local cnn_part = nn.Sequential()
   cnn_part:add(vision_encoder)
@@ -32,6 +34,8 @@ function net_utils.build_cnn(opt)
   print(string.format('===> Loading pre-trained model complete', model_filename))
   return cnn_part 
   --]]
+  vision_encoder:add(nn.View(2048))
+  cudnn.convert(vision_encoder, cudnn)
   print(string.format('===> Loading pre-trained model complete: %s', model_filename))
   print(vision_encoder)
   return vision_encoder

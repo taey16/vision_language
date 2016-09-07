@@ -155,7 +155,7 @@ local function eval_split(split, evalopt)
   local loss_sum = 0
   local logprobs_sum = 0
   local perplexity = 0
-  local accuracy = 0
+  local precision = 0
   local loss_evals = 0
   local predictions = {}
   local vocab = loader:getVocab()
@@ -183,11 +183,11 @@ local function eval_split(split, evalopt)
     local logprobs = protos.lm:forward{expanded_feats, data.labels}
     local loss = protos.crit:forward(logprobs, data.labels)
     local acc, pplx = 0, 0
-    acc, pplx = protos.crit:accuracy(logprobs, data.labels)
+    acc, pplx = protos.crit:precision(logprobs, data.labels)
     loss_sum = loss_sum + loss
     --logprobs_sum = logprobs_sum + logprobs
     loss_evals = loss_evals + 1
-    accuracy = accuracy + acc[2]
+    precision = precision + acc[2]
     perplexity = perplexity + pplx
 
     -- forward the model to also get generated samples for each image
@@ -225,7 +225,7 @@ local function eval_split(split, evalopt)
     net_utils.tsne_embedding(thin_lm.lookup_table, vocab, opt_iter, checkpoint_path)
   end
 
-  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, accuracy/loss_evals
+  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, precision/loss_evals
 end
 
 -------------------------------------------------------------------------------
@@ -269,8 +269,8 @@ local function lossFun(finetune_cnn)
   -- forward the language model criterion
   local loss = protos.crit:forward(logprobs, data.labels)
   -- compute perplexity
-  local perplexity, accuracy = 0, 0
-  accuracy, perplexity = protos.crit:accuracy(logprobs, data.labels)
+  local perplexity, precision = 0, 0
+  precision, perplexity = protos.crit:precision(logprobs, data.labels)
   
   -----------------------------------------------------------------------------
   -- Backward pass
@@ -298,7 +298,7 @@ local function lossFun(finetune_cnn)
   end
   -----------------------------------------------------------------------------
 
-  return {total_loss = loss, total_perplexity = perplexity, accuracy = accuracy}
+  return {total_loss = loss, total_perplexity = perplexity, precision = precision}
 end
 
 local logger_trn = 
@@ -379,7 +379,7 @@ while true do
     io.flush(print(string.format(
       '%d/%d: %.2f, loss: %f, acc: %f, pplx: %f, lr: %.8f, cnn_lr: %.8f, finetune: %s, optim: %s, %.3f', 
       iter, number_of_batches, epoch,
-      losses.total_loss, losses.accuracy[2], losses.total_perplexity,
+      losses.total_loss, losses.precision[2], losses.total_perplexity,
       learning_rate, cnn_learning_rate, 
       tostring(finetune_cnn), opt.optim, elapsed_trn)))
   end
@@ -395,11 +395,11 @@ while true do
 
     local start_tst = tm:time().real
     -- evaluate the validation performance
-    local val_loss, val_predictions, lang_stats, perplexity, val_accuracy = 
+    local val_loss, val_predictions, lang_stats, perplexity, val_precision = 
       eval_split('val', {val_images_use = opt.val_images_use, use_bn = opt.use_bn, iter = iter, checkpoint_path = opt.checkpoint_path})
     local elapsed_tst = tm:time().real
     io.flush( print(string.format(
-        'validation loss: %f, perplexity: %f, accuracy: %f', val_loss, perplexity, val_accuracy
+        'validation loss: %f, perplexity: %f, precision: %f', val_loss, perplexity, val_precision
     )))
     --print(lang_stats)
 
