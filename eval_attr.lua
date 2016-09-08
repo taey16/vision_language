@@ -112,9 +112,6 @@ local function eval_split(split, evalopt)
   loader:resetIterator(split)
   local n = 0
   local loss_sum = 0
-  local precision = 0
-  local loss_evals = 0
-  local predictions = {}
   while true do
     -- fetch a batch of data
     local data = loader:getBatch{
@@ -141,21 +138,11 @@ local function eval_split(split, evalopt)
 
     -- evaluate loss if we have the labels
     local loss = 0
-    local prec = 0
-    local prec_per_seq = 0
     local expanded_feats = protos.expander:forward(feats)
     local logprobs = protos.lm:forward{expanded_feats, data.labels}
     -- logprobs:size() --> (opt.seq_length+2, opt.batch_size, # of total words)
     loss = protos.crit:forward(logprobs, data.labels)
     loss_sum = loss_sum + loss
-
-    prec, _ = protos.crit:precision(logprobs, data.labels)
-    for i=1,opt.seq_length do 
-      if vocab[tostring(data.labels[i][1])] ~= nil then
-        prec_per_seq = prec_per_seq + prec[i] 
-      end
-    end
-    loss_evals = loss_evals + 1
 
     -- forward the model to also get generated samples for each image
     local sample_opts = {sample_max = opt.sample_max, 
@@ -163,8 +150,6 @@ local function eval_split(split, evalopt)
                          temperature = opt.temperature}
     local seq = protos.lm:sample(feats, sample_opts)
     local sents, num_words = net_utils.decode_sequence(vocab, seq)
-    prec_per_seq = prec_per_seq / num_words
-    precision = precision + prec_per_seq
 
     local gt_sents = ''
     for i=1,opt.seq_length do
@@ -180,10 +165,6 @@ local function eval_split(split, evalopt)
         file_path = data.infos[k].file_path, 
         caption = sents[k], 
         gt = gt_sents}
-      --if opt.dump_path == 1 then
-      --  entry.file_name = data.infos[k].file_path
-      --end
-      table.insert(predictions, entry)
       if verbose then
         print(string.format('image %s: %s predicted: %s',entry.image_id, entry.file_path, entry.caption))
         print(string.format('image %s: %s gt:       %s', entry.image_id, entry.file_path, entry.gt))
@@ -196,9 +177,8 @@ local function eval_split(split, evalopt)
     local ix0 = data.bounds.it_pos_now
     local ix1 = math.min(data.bounds.it_max, num_images)
     if verbose then
-      print(string.format('evaluating performance... %d/%d (loss: %f, precision: %f)', 
-        ix0-1, ix1, 
-        loss, prec_per_seq))
+      print(string.format('evaluating performance... %d/%d (loss: %f)', 
+        ix0-1, ix1, loss))
     end
 
     if data.bounds.wrapped then break end -- the split ran out of data, lets break out
@@ -207,14 +187,11 @@ local function eval_split(split, evalopt)
 
   if n % opt.batch_size * 100 == 0 then collectgarbage() end
 
-  return loss_sum/loss_evals, 
-         predictions, 
-         precision/loss_evals
+  return loss_sum/n
 end
 
-local loss, split_predictions, precision = 
-  eval_split(opt.split, {num_images = opt.num_images})
-print(string.format('loss: %f, prec: %f', loss, precision))
+local loss = eval_split(opt.split, {num_images = opt.num_images})
+print(string.format('loss: %f', loss))
 
 logger_output:close()
 print('Done')
