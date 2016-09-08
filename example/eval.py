@@ -1,13 +1,14 @@
-#!/usr/bin/env python                                                                                      |  1
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
+# NOTE:read prediction result
+# format: predicted sequence of attributes\tground-truth sequence of attributes
 entries = [entry.strip().split('\t') for entry in \
             open(sys.argv[1], 'r')]
 
-import pdb; pdb.set_trace()
+# NOTE: compute prec/rec for each image, and then averaging them
+#import pdb; pdb.set_trace()
 average_precision = 0.0
 average_recall = 0.0
 for entry in entries:

@@ -14,14 +14,13 @@ require 'models.LanguageModel'
 require 'models.FeatExpander'
 require 'optim'
 
-
---opt = paths.dofile('opts/opt_attribute.lua')
 local opt = paths.dofile('opts/opt_coco_inception-v3-default.lua')
 torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeedAll(opt.seed)
 
-local loader = DataLoader{h5_file = opt.input_h5, json_file = opt.input_json}
+local loader = DataLoader{h5_file = opt.input_h5, 
+                          json_file = opt.input_json}
 
 local protos = {}
 if string.len(opt.start_from) > 0 then
@@ -76,8 +75,8 @@ else
     end
   end
   -- initialize the pretrained ConvNet
-  protos.cnn = net_utils.build_cnn(
-    {encoding_size = opt.input_encoding_size, model_filename = opt.torch_model}
+  protos.cnn = net_utils.build_cnn({encoding_size = opt.input_encoding_size, 
+                                    model_filename = opt.torch_model}
   )
   -- initialize a special FeatExpander module that "corrects" for the batch number discrepancy 
   -- where we have multiple captions per one image in a batch. This is done for efficiency
@@ -172,9 +171,10 @@ local function eval_split(split, evalopt)
     data.labels = data.labels[{{1,opt.seq_length},{}}]
 
     -- preprocess in place, and don't augment
-    data.images = net_utils.preprocess(
-      data.images, opt.crop_size, false, false
-    )
+    data.images = net_utils.preprocess(data.images, 
+                                       opt.crop_size, 
+                                       false, 
+                                       false)
     n = n + data.images:size(1)
 
     -- forward the model to get loss
@@ -194,12 +194,15 @@ local function eval_split(split, evalopt)
     local seq = protos.lm:sample(feats)
     local sents = net_utils.decode_sequence(vocab, seq)
     for k=1,#sents/16 do
-      local entry = {image_id = data.infos[k].id, file_path = data.infos[k].file_path, caption = sents[k]}
+      local entry = {image_id = data.infos[k].id, 
+                     file_path = data.infos[k].file_path, 
+                     caption = sents[k]}
       table.insert(predictions, entry)
       if verbose then
-        io.flush(print(string.format(
-          'image %s(%s): %s', entry.image_id, entry.file_path, entry.caption
-        )))
+        io.flush(print(string.format('image %s(%s): %s', 
+                                     entry.image_id, 
+                                     entry.file_path, 
+                                     entry.caption)))
       end
     end
 
@@ -222,10 +225,17 @@ local function eval_split(split, evalopt)
     lang_stats = net_utils.language_eval(predictions, opt.id)
   end
   if opt.tsne == 1 then
-    net_utils.tsne_embedding(thin_lm.lookup_table, vocab, opt_iter, checkpoint_path)
+    net_utils.tsne_embedding(thin_lm.lookup_table, 
+                             vocab, 
+                             opt_iter, 
+                             checkpoint_path)
   end
 
-  return loss_sum/loss_evals, predictions, lang_stats, perplexity/loss_evals, precision/loss_evals
+  return loss_sum/loss_evals, 
+         predictions, 
+         lang_stats, 
+         perplexity/loss_evals, 
+         precision/loss_evals
 end
 
 -------------------------------------------------------------------------------
@@ -253,9 +263,10 @@ local function lossFun(finetune_cnn)
   data.labels = data.labels[{{1,opt.seq_length},{}}]
 
   -- preproces in-place, data augment in training
-  data.images = net_utils.preprocess(
-    data.images, opt.crop_size, opt.crop_jitter, opt.flip_jitter
-  )
+  data.images = net_utils.preprocess(data.images, 
+                                     opt.crop_size, 
+                                     opt.crop_jitter, 
+                                     opt.flip_jitter)
 
   -- data.images: Nx3xopt.image_sizexopt.image_size
   -- data.seq: LxM where L is sequence length upper bound, and M = N*seq_per_img
@@ -298,7 +309,9 @@ local function lossFun(finetune_cnn)
   end
   -----------------------------------------------------------------------------
 
-  return {total_loss = loss, total_perplexity = perplexity, precision = precision}
+  return {total_loss = loss, 
+          total_perplexity = perplexity, 
+          precision = precision}
 end
 
 local logger_trn = 
@@ -332,7 +345,8 @@ while true do
   -- decay the learning rate for both LM and CNN
   local learning_rate = opt.learning_rate
   local cnn_learning_rate = opt.cnn_learning_rate
-  if iter > opt.learning_rate_decay_start and opt.learning_rate_decay_start >= 0 then
+  if iter > opt.learning_rate_decay_start and 
+     opt.learning_rate_decay_start >= 0 then
     local frac = (iter - opt.learning_rate_decay_start) / opt.learning_rate_decay_every
     local decay_factor = math.pow(opt.learning_rate_decay_seed, frac)
     learning_rate = learning_rate * decay_factor
@@ -396,11 +410,17 @@ while true do
     local start_tst = tm:time().real
     -- evaluate the validation performance
     local val_loss, val_predictions, lang_stats, perplexity, val_precision = 
-      eval_split('val', {val_images_use = opt.val_images_use, use_bn = opt.use_bn, iter = iter, checkpoint_path = opt.checkpoint_path})
+      eval_split('val', 
+                 {val_images_use = opt.val_images_use, 
+                  use_bn = opt.use_bn, 
+                  iter = iter, 
+                  checkpoint_path = opt.checkpoint_path})
     local elapsed_tst = tm:time().real
-    io.flush( print(string.format(
-        'validation loss: %f, perplexity: %f, precision: %f', val_loss, perplexity, val_precision
-    )))
+    print(string.format('validation loss: %f, perplexity: %f, precision: %f', 
+                        val_loss, 
+                        perplexity, 
+                        val_precision))
+    io.flush()
     --print(lang_stats)
 
     local checkpoint_path = 
@@ -414,9 +434,7 @@ while true do
     checkpoint.val_predictions = val_predictions
 
     utils.write_json(checkpoint_path .. '.json', checkpoint)
-    io.flush(print(
-      'wrote json checkpoint to ' .. checkpoint_path .. '.json'
-    ))
+    io.flush(print('wrote json checkpoint to ' .. checkpoint_path .. '.json'))
 
     -- write the full model checkpoint as well if we did better than ever
     local current_score
@@ -439,9 +457,7 @@ while true do
         -- alone to run on arbitrary images without the data loader
         checkpoint.vocab = loader:getVocab()
         torch.save(checkpoint_path .. '.t7', checkpoint)
-        io.flush(print(
-          'wrote checkpoint to ' .. checkpoint_path .. '.t7'
-        ))
+        io.flush(print( 'wrote checkpoint to ' .. checkpoint_path .. '.t7'))
       end
     end
     if lang_stats then
