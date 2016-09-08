@@ -31,7 +31,7 @@ local batch_size = 1
 -------------------------------------------------------------------------------
 cmd = torch.CmdLine()
 cmd:text()
-cmd:text('Testing an Image Captioning model')
+cmd:text('Testing an attribute-sequence model')
 cmd:text()
 cmd:text('Options')
 
@@ -59,12 +59,12 @@ cmd:option('-input_json',
   '/storage/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.json',
   'path to the json file containing additional info and vocab. empty = fetch from model checkpoint.')
 cmd:option('-output',
-  nil,
+  '',
   'path to the write prediction-gt pairs in disk')
 cmd:option('-split', 
-  --'test', 
+  'test', 
   --'val', 
-  'train',
+  --'train',
   'if running on images, which split to use: val|test|train')
 
 -- misc
@@ -76,7 +76,7 @@ torch.manualSeed(opt.seed)
 torch.setdefaulttensortype('torch.FloatTensor')
 cutorch.manualSeed(opt.seed)
 
-assert(apt.output, 'use --output')
+assert(opt.output, 'use -output')
 logger_output = io.open(opt.output, 'w')
 
 assert(string.len(opt.model) > 0, 'must provide a model')
