@@ -302,13 +302,13 @@ local logger_tst =
 -------------------------------------------------------------------------------
 local iter = opt.retrain_iter
 local loss0
+local smooth_loss = 0
 local number_of_batches = opt.train_samples / opt.batch_size
 local optim_state = {}
 local cnn_optim_state = {}
 local best_score
 local tm = torch.Timer()
 
-smooth_loss = 0
 while true do  
   local start_trn = tm:time().real
 
@@ -329,6 +329,17 @@ while true do
     local decay_factor = math.pow(opt.learning_rate_decay_seed, frac)
     learning_rate = learning_rate * decay_factor
     cnn_learning_rate = cnn_learning_rate * decay_factor
+  end
+
+  if opt.grad_noise then
+    local grad_noise_std = math.sqrt(opt.grad_noise_eta / math.pow(1.0 + iter, opt.grad_noise_gamma))
+    local grad_noise_rnn = torch.randn(grad_params:size()):cuda() * grad_noise_std
+    --print(string.format('grad_noise_std: %f', grad_noise_std))
+    grad_params:add(grad_noise_rnn)
+    if finetune_cnn then
+      local grad_noise_cnn = torch.randn(cnn_grad_params:size()):cuda() * grad_noise_std
+      cnn_grad_params:add(grad_noise_cnn)
+    end
   end
 
   if opt.optim == 'adam' then

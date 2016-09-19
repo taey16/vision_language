@@ -1,8 +1,11 @@
 
+-- input h5 filepath from prepro_attribute.py
 local input_h5 = 
-  '/data2/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.h5'
+  '*.h5'
+-- input json filepath from prepro_attribute.py
 local input_json = 
-  '/data2/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.json'
+  '*.json'
+-- specify # of samples
 local total_samples_train =
   721544 + 40000 + 40000
 local total_samples_valid =
@@ -10,17 +13,18 @@ local total_samples_valid =
 local total_samples_test =
   40000
 local dataset_name =
-  'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra'
+  ''
 
+-- path to pretrained image-encoder model
 local torch_model= 
   '/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.t7'
-  --'/data2/ImageNet/ILSVRC2012/torch_cache/X_gpu1_resception_nag_lr0.00450_decay_start0_every160000/model_29.bn_removed.t7'
-  --'/storage/ImageNet/ILSVRC2012/torch_cache/inception7_residual/digits_gpu1_inception-v3-2015-12-05_lr0.045_Mon_Jan_18_13_23_03_2016/model_33.bn_removed.t7'
-local image_size = 342
-local crop_size = 299
-local crop_jitter = true
-local flip_jitter = false
+-- vision-encoder parameters
+local image_size = 342 -- image size, see prepro_attribute.py
+local crop_size = 299 -- cropped image size
+local crop_jitter = true -- crop jitter
+local flip_jitter = false -- flip jitter (NOTE: Do not set to true)
 
+-- language decoder parameters
 local rnn_size = 512
 local num_rnn_layers = 2
 local seq_length = 14
@@ -29,44 +33,49 @@ local use_bn = 'original'
 local init_gamma = 0.1
 local rnn_type = 'lstm'
 local rnn_activation = 'tanh'
-local drop_prob_lm = 0.2
+local drop_prob_lm = 0.4
 
+-- optimisation parameters
 local batch_size = 16
 local optimizer = 'adam'
 local learning_rate = 0.001
 local alpha = 0.9
+-- learning rate annealing
 local learning_rate_decay_seed = 
-  0.9
-  --0.94
+  --0.9
+  0.94
 local learning_rate_decay_start = 
-  45096 * 12
+  45096 * (12 + 3)
 local learning_rate_decay_every = 
   45096
-local finetune_cnn_after = 0
+local grad_noise = true
+local grad_noise_eta = 0.001
+local grad_noise_gamma = 0.55
+local finetune_cnn_after = 45096 * 3
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
 local cnn_weight_decay = 0.00001
 
-local gpus = {1,2,3,4}
+local gpus = {1,2}
+-- specify iteration number from previous checkpoint file
 local retrain_iter = 
   0
+-- if you have a pretrained embedding lookup weights file
 local embedding_model = 
-  '/storage/attribute/checkpoints/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra_801544_40000_seq_length14/resception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.90_start541152_every45096_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0/model_idresception_ep29_bs16_flipfalse_croptrue_original_init_gamma0.100000_lstm_tanh_hid512_lay2_drop2.000000e-01_adam_lr1.000000e-03_seed0.90_start541152_every45096_finetune0_cnnlr1.000000e-03_cnnwc1.000000e-05_retrain_iter0.t7'
+  ''
+-- if you want to re-train from your saved checkpoint file
 local start_from = 
   ''
 local experiment_id = string.format(
-  'tsne_resception_embedding_ep29_bs%d_flip%s_crop%s_%s_init_gamma%f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
-  --'resception_ep29_bn_removed_bs%d_flip%s_crop%s_%s_%s_hid%d_lay%d_drop%.1f_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e', 
-  --'_inception-v3-2015-12-05_bn_removed_epoch33_bs%d_flip%s_crop%s_%s_%s_hidden%d_layer%d_dropout%.1f_lr%e_anneal_seed%.2f_start%d_every%d_finetune%d_cnnlr%e', 
+  'grad_noise_resception_bs%d_%s_init_gamma%.3f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
   batch_size, 
-  flip_jitter, crop_jitter, 
   use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
   optimizer, cnn_optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
   finetune_cnn_after, cnn_learning_rate, cnn_weight_decay,
   retrain_iter
 )
 local checkpoint_path = string.format(
-  '/storage/attribute/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
+  '/storage/a/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
 )
 
 if start_from ~= '' and retrain_iter == 0 then
@@ -125,6 +134,9 @@ cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
 cmd:option('-grad_clip', 0.1,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
+cmd:option('-grad_noise', grad_noise, 'injecting grad. noise')
+cmd:option('-grad_noise_eta', grad_noise_eta, 'eta for grad. noise')
+cmd:option('-grad_noise_gamma', grad_noise_gamma, 'gamma for grad. noise')
 cmd:option('-drop_prob_lm', drop_prob_lm, 
   'strength of dropout in the Language Model RNN')
 cmd:option('-finetune_cnn_after', finetune_cnn_after, 
@@ -166,11 +178,13 @@ cmd:option('-test_images_use',total_samples_test,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
 cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size), 
   'how often to save a model checkpoint?')
+cmd:option('-test_initialization', false, 
+  'if true, validating at first')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
 cmd:option('-language_eval', 0, 
   'Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
-cmd:option('-tsne', 1, 'Save word-embedding vector using tsne')
+cmd:option('-tsne', 0, 'Save word-embedding vector in disk using tsne')
 
 -- misc
 cmd:option('-gpus', gpus, '# of gpus for cnn')
