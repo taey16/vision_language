@@ -331,6 +331,7 @@ while true do
     cnn_learning_rate = cnn_learning_rate * decay_factor
   end
 
+  -- ADDING GRADIENT NOISE IMPROVES LEARNING FOR VERY DEEP NETWORKS
   if opt.grad_noise then
     local grad_noise_std = math.sqrt(opt.grad_noise_eta / math.pow(1.0 + iter, opt.grad_noise_gamma))
     local grad_noise_rnn = torch.randn(grad_params:size()):cuda() * grad_noise_std
