@@ -1,10 +1,10 @@
 
 -- input h5 filepath from prepro_attribute.py
 local input_h5 = 
-  '*.h5'
+  '/data2/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.h5'
 -- input json filepath from prepro_attribute.py
 local input_json = 
-  '*.json'
+  '/data2/freebee/tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra.image_sentence.txt.shuffle.txt.cutoff50.json'
 -- specify # of samples
 local total_samples_train =
   721544 + 40000 + 40000
@@ -13,7 +13,7 @@ local total_samples_valid =
 local total_samples_test =
   40000
 local dataset_name =
-  ''
+  'tshirts_shirts_blous_knit_jacket_onepiece_skirts_coat_cardigan_vest_pants_leggings_shoes_bags_swimwears_hat_panties_bra'
 
 -- path to pretrained image-encoder model
 local torch_model= 
@@ -42,21 +42,21 @@ local learning_rate = 0.001
 local alpha = 0.9
 -- learning rate annealing
 local learning_rate_decay_seed = 
-  --0.9
-  0.94
+  0.9
+  --0.94
 local learning_rate_decay_start = 
-  45096 * (12 + 3)
+  45096 * (13 + 3)
 local learning_rate_decay_every = 
   45096
-local grad_noise = true
+local grad_noise = false
 local grad_noise_eta = 0.001
 local grad_noise_gamma = 0.55
 local finetune_cnn_after = 45096 * 3
 local cnn_optimizer = 'nag'
 local cnn_learning_rate = 0.001
-local cnn_weight_decay = 0.00001
+local cnn_weight_decay =  0.00005
 
-local gpus = {1,2}
+local gpus = {1,2,3,4}
 -- specify iteration number from previous checkpoint file
 local retrain_iter = 
   0
@@ -67,7 +67,7 @@ local embedding_model =
 local start_from = 
   ''
 local experiment_id = string.format(
-  'grad_noise_resception_bs%d_%s_init_gamma%.3f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
+  'grad_noise_resception_bs%d_%s_gamma%.3f_%s_%s_hid%d_lay%d_drop%e_%s_%s_lr%e_seed%.2f_start%d_every%d_finetune%d_cnnlr%e_cnnwc%e_retrain_iter%d', 
   batch_size, 
   use_bn, init_gamma, rnn_type, rnn_activation, rnn_size, num_rnn_layers, drop_prob_lm, 
   optimizer, cnn_optimizer, learning_rate, learning_rate_decay_seed, learning_rate_decay_start, learning_rate_decay_every,
@@ -75,7 +75,7 @@ local experiment_id = string.format(
   retrain_iter
 )
 local checkpoint_path = string.format(
-  '/storage/a/checkpoints/%s_%d_%d_seq_length%d/', dataset_name, total_samples_train, total_samples_valid, seq_length
+  '/storage/%s/checkpoints/%s_%d_%d_seq_length%d/', experiment_id, dataset_name, total_samples_train, total_samples_valid, seq_length
 )
 
 if start_from ~= '' and retrain_iter == 0 then
@@ -132,7 +132,7 @@ cmd:option('-max_iters', -1,
   'max number of iterations to run for (-1 = run forever)')
 cmd:option('-batch_size', batch_size,
   'what is the batch size in number of images per batch? (there will be x seq_per_img sentences)')
-cmd:option('-grad_clip', 0.1,
+cmd:option('-grad_clip', 0.2,
   'clip gradients at this value (note should be lower than usual 5 because we normalize grads by both batch and seq_length)')
 cmd:option('-grad_noise', grad_noise, 'injecting grad. noise')
 cmd:option('-grad_noise_eta', grad_noise_eta, 'eta for grad. noise')
@@ -178,7 +178,7 @@ cmd:option('-test_images_use',total_samples_test,
   'how many images to use when periodically evaluating the validation loss? (-1 = all)')
 cmd:option('-save_checkpoint_every', math.floor((total_samples_train - total_samples_valid - total_samples_test) / batch_size), 
   'how often to save a model checkpoint?')
-cmd:option('-test_initialization', false, 
+cmd:option('-test_initialization', true, 
   'if true, validating at first')
 cmd:option('-checkpoint_path', checkpoint_path, 
   'folder to save checkpoints into (empty = this folder)')
