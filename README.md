@@ -23,7 +23,3 @@
 
 # Plotting learning curve
 1. Both log-files for train/val are saved in your checkpoint path automatically. 
-
-# Evaluating precision/recall for test set
-1. Prediction for test set: `CUDA_VISIBLE_DEVICES=0 th eval_attr.lua -output prediction_result.txt`
-2. Evaluation for the prediction result: `python example/eval.py prediction_result.txt`
